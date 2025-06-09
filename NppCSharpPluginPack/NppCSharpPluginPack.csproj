@@ -10,9 +10,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NppDemo</RootNamespace>
     <AssemblyName>CSharpPluginPack</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <OldToolsVersion>3.5</OldToolsVersion>
     <ProjectGuid>{EB8FC3A3-93E8-457B-B281-FAFA5119611A}</ProjectGuid>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,7 +25,6 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>none</DebugType>
@@ -36,7 +36,6 @@
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,7 +47,6 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DebugType>none</DebugType>
@@ -60,7 +58,6 @@
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Default values for debugging so it start correct version of Notepad++
@@ -81,19 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- forms -->
-    <Compile Include="Forms\FormBase.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\FormBase.Designer.cs">
-      <DependentUpon>FormBase.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\NppFormHelper.cs" />
-    <Compile Include="Forms\AboutForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\AboutForm.Designer.cs">
-      <DependentUpon>AboutForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\PopupDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -113,7 +98,7 @@
       <DependentUpon>DarkModeTestForm.cs</DependentUpon>
     </Compile>
     <!-- infrastructure -->
-    <Compile Include="PluginInfrastructure\CLikeStringArray.cs" />
+    <Compile Include="PluginInfrastructure\ClikeStringArray.cs" />
     <Compile Include="PluginInfrastructure\DllExport\DllExportAttribute.cs" />
     <Compile Include="PluginInfrastructure\Docking_h.cs" />
     <Compile Include="PluginInfrastructure\GatewayDomain.cs" />
@@ -147,56 +132,50 @@
     <Compile Include="Tests\SliceTests.cs" />
     <Compile Include="Tests\UserInterfaceTests.cs" />
     <Compile Include="Tests\TestRunner.cs" />
+    <Compile Include="Utils\Converters.cs" />
+    <Compile Include="Utils\ElementHostEx.cs" />
     <!-- other utilities -->
     <Compile Include="Utils\FormStyle.cs" />
     <Compile Include="Utils\ArrayExtensions.cs" />
+    <Compile Include="Utils\NotifyPropertyChanged.cs" />
     <Compile Include="Utils\Npp.cs" />
     <Compile Include="Utils\NanInf.cs" />
-    <Compile Include="Utils\NppListener.cs" />
     <Compile Include="Utils\SelectionManager.cs" />
     <Compile Include="Utils\Settings.cs" />
-    <Compile Include="Utils\Translator.cs" />
-    <!-- JSON parsing (for translation to other languages) -->
-    <Compile Include="JSON_Tools\JNode.cs" />
-    <Compile Include="JSON_Tools\JsonParser.cs" />
+    <Compile Include="Views\AboutWindow.xaml.cs">
+      <DependentUpon>AboutWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DarkModeTestWindow.xaml.cs">
+      <DependentUpon>DarkModeTestWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EditorTemplateSelector.cs" />
+    <Compile Include="Views\PopupWindow.xaml.cs">
+      <DependentUpon>PopupWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SelectionRememberingControl.xaml.cs">
+      <DependentUpon>SelectionRememberingControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsWindow.cs" />
+    <Compile Include="Views\SettingsWindowBase.xaml.cs">
+      <DependentUpon>SettingsWindowBase.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
-  <Choose>
-    <!-- where should we look for dependency assemblies? -->
-    <When Condition=" '$(Platform)' == ''">
-      <ItemGroup>
-        <DEPENDENCY_DIR Include="Dependencies\x64" />
-        <DEPENDENCY_DLLS Include="Dependencies\x64\*.dll" />
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <DEPENDENCY_DIR Include="Dependencies\$(Platform)" />
-        <DEPENDENCY_DLLS Include="Dependencies\$(Platform)\*.dll" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
   <ItemGroup>
     <!-- references -->
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Net.Http" />
-    <!-- third-party dependencies -->
-    <Reference Include="ExampleDependency">
-      <HintPath>@(DEPENDENCY_DIR)\ExampleDependency.dll</HintPath>
-    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <!-- resx files -->
-    <EmbeddedResource Include="Forms\AboutForm.resx">
-      <DependentUpon>AboutForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\FormBase.resx">
-      <DependentUpon>FormBase.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Forms\PopupDialog.resx">
       <DependentUpon>PopupDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -214,6 +193,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- icons and such -->
+    <Resource Include="Properties\star_white.ico" />
+    <Resource Include="Properties\star.png" />
+    <Resource Include="Properties\star_black.ico" />
     <Content Include="Properties\star_bmp.bmp" />
     <None Include="Resources\close html tag toolbar darkmode.ico" />
     <None Include="Resources\close html tag toolbar.ico" />
@@ -224,9 +206,30 @@
     <None Include="Resources\selection remembering form toolbar.ico" />
     <None Include="Resources\about form toolbar bmp.bmp" />
     <None Include="Resources\selection remembering form toolbar bmp.bmp" />
-    <None Include="Resources\about form icon.PNG" />
+    <Resource Include="Resources\about form icon.PNG" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Page Include="Views\AboutWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DarkModeTestWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PopupWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SelectionRememberingControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SettingsWindowBase.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Condition="Exists($(PkgUnmanagedExports_Repack_Upgrade))" Project="$(PkgUnmanagedExports_Repack_Upgrade)\build\UnmanagedExports.Repack.Upgrade.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -236,40 +239,14 @@
     <!-- copy over the appropriate DLL and test files to the Notepad++ directory.
     Otherwise Notepad++ will just load without the plugin. -->
     <ItemGroup>
-      <RELEASE64 Include="bin\Release-x64\*.*" />
-      <DEBUG64 Include="bin\Debug-x64\*.*" />
-      <RELEASE32 Include="bin\Release\*.*" />
-      <DEBUG32 Include="bin\Debug\*.*" />
-      <NPP64BIT Include="$(NppPath64)\plugins\$(AssemblyName)" />
-      <NPP32BIT Include="$(NppPath32)\plugins\$(AssemblyName)" />
-      <TRANSLATION_ORIGIN Include="..\translation\*.json5" />
-      <TRANSLATION32 Include="$(NppPath32)\plugins\$(AssemblyName)\translation" />
-      <TRANSLATION64 Include="$(NppPath64)\plugins\$(AssemblyName)\translation" />
-      <TESTFILES_ORIGIN Include="..\testfiles\*.*" />
-      <TESTFILES32 Include="$(NppPath32)\plugins\$(AssemblyName)\testfiles" />
-      <TESTFILES64 Include="$(NppPath64)\plugins\$(AssemblyName)\testfiles" />
+      <NPP64BIT Include="$(NppPath64)\plugins\CSharpPluginPack" />
+      <NPP32BIT Include="$(NppPath32)\plugins\CSharpPluginPack" />
     </ItemGroup>
     <MakeDir Directories="@(NPP64BIT)" Condition=" '$(Platform)' == 'x64' " />
     <MakeDir Directories="@(NPP32BIT)" Condition=" '$(Platform)' == 'x86' " />
-    <!-- copy all dependency DLL's to current bin directory -->
-    <Copy Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " SourceFiles="@(DEPENDENCY_DLLS)" DestinationFolder="bin\Release-x64" SkipUnchangedFiles="true" />
-    <Copy Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " SourceFiles="@(DEPENDENCY_DLLS)" DestinationFolder="bin\Release" SkipUnchangedFiles="true" />
-    <Copy Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " SourceFiles="@(DEPENDENCY_DLLS)" DestinationFolder="bin\Debug-x64" SkipUnchangedFiles="true" />
-    <Copy Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " SourceFiles="@(DEPENDENCY_DLLS)" DestinationFolder="bin\Debug" SkipUnchangedFiles="true" />
-    <!-- copy all translation files to NPP plugin dir's subdirectory -->
-    <MakeDir Directories="@(TRANSLATION64)" Condition=" '$(Platform)' == 'x64' " />
-    <MakeDir Directories="@(TRANSLATION32)" Condition=" '$(Platform)' == 'x86' " />
-    <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="@(TRANSLATION_ORIGIN)" DestinationFolder="@(TRANSLATION64)" SkipUnchangedFiles="true" />
-    <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="@(TRANSLATION_ORIGIN)" DestinationFolder="@(TRANSLATION32)" SkipUnchangedFiles="true" />
-    <!-- copy all test files to NPP plugin dir's subdirectory -->
-    <MakeDir Directories="@(TESTFILES64)" Condition=" '$(Platform)' == 'x64' " />
-    <MakeDir Directories="@(TESTFILES32)" Condition=" '$(Platform)' == 'x86' " />
-    <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="@(TESTFILES_ORIGIN)" DestinationFolder="@(TESTFILES64)" SkipUnchangedFiles="true" />
-    <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="@(TESTFILES_ORIGIN)" DestinationFolder="@(TESTFILES32)" SkipUnchangedFiles="true" />
-    <!-- copy all files in current bin directory to NPP plugin dir -->
-    <Copy SourceFiles="@(RELEASE64)" Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " DestinationFolder="@(NPP64BIT)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(RELEASE32)" Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " DestinationFolder="@(NPP32BIT)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(DEBUG64)" Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " DestinationFolder="@(NPP64BIT)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(DEBUG32)" Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " DestinationFolder="@(NPP32BIT)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="bin\Release-x64\CSharpPluginPack.dll" Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " DestinationFolder="@(NPP64BIT)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="bin\Release\CSharpPluginPack.dll" Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " DestinationFolder="@(NPP32BIT)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="bin\Debug-x64\CSharpPluginPack.dll" Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " DestinationFolder="@(NPP64BIT)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="bin\Debug\CSharpPluginPack.dll" Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " DestinationFolder="@(NPP32BIT)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

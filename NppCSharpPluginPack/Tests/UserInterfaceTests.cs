@@ -131,12 +131,7 @@ namespace NppDemo.Tests
                 SelectionManager.SetSelectionsFromStartEnds(startEndStrings);
                 break;
             case FileManipulation.SelectWholeDoc:
-                if (!Npp.TryGetLengthAsInt(out int len, false))
-                {
-                    messages.Add("FAIL: buffer was too long");
-                    return true;
-                }
-                var wholeSelStr = $"0,{len}";
+                var wholeSelStr = $"0,{Npp.editor.GetLength()}";
                 messages.Add("select whole document");
                 SelectionManager.SetSelectionsFromStartEnds(new string[] { wholeSelStr });
                 break;
@@ -166,11 +161,7 @@ namespace NppDemo.Tests
                 break;
             case FileManipulation.CompareText:
                 correctText = (string)args[0];
-                if (!Npp.TryGetText(out gotText, false))
-                {
-                    messages.Add("FAIL: buffer was too long");
-                    return true;
-                }
+                gotText = Npp.editor.GetText();
                 if (correctText != gotText)
                 {
                     messages.Add($"FAIL: expected text\r\n{correctText}\r\nGOT\r\n{gotText}");

@@ -39,14 +39,6 @@ namespace NppDemo.Utils
         public static readonly bool nppVersionAtLeast8 = nppVersion[0] >= 8;
 
         /// <summary>
-        /// the directory containing of the plugin DLL (i.e., the DLL that this code compiles into)<br></br>
-        /// usually Path.Combine(notepad.GetNppPath(), "plugins", Main.PluginName) would work just as well,<br></br>
-        /// but under some weird circumstances (see this GitHub issue comment: https://github.com/molsonkiko/NppCSharpPluginPack/issues/5#issuecomment-1982167513)<br></br>
-        /// it can fail.
-        /// </summary>
-        public static readonly string pluginDllDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-        /// <summary>
         /// append text to current doc, then append newline and move cursor
         /// </summary>
         /// <param name="inp"></param>
@@ -118,7 +110,7 @@ namespace NppDemo.Utils
         {
             if (text == null || text.Length == 0)
             {
-                Translator.ShowTranslatedMessageBox("Couldn't find anything to copy to the clipboard",
+                MessageBox.Show("Couldn't find anything to copy to the clipboard",
                     "Nothing to copy to clipboard",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning
@@ -126,49 +118,6 @@ namespace NppDemo.Utils
                 return;
             }
             Clipboard.SetText(text);
-        }
-
-        private static bool stopShowingFileTooLongNotifications = false;
-
-        private static void WarnFileTooBig(bool showMessage)
-        {
-            if (showMessage && !stopShowingFileTooLongNotifications)
-                stopShowingFileTooLongNotifications = Translator.ShowTranslatedMessageBox(
-                    $"{Main.PluginName} cannot perform this plugin command on a file with more than 2147483647 bytes.\r\nDo you want to stop showing notifications when a file is too long?",
-                    $"File too long for {Main.PluginName}",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
-        }
-
-        /// <summary>
-        /// if <see cref="IScintillaGateway.GetLength"/> returns a number greater than <see cref="int.MaxValue"/>, return false and set len to -1.<br></br>
-        /// Otherwise, return true and set len to the length of the document.<br></br>
-        /// If showMessageOnFail, show a message box warning the user that the command could not be executed.
-        /// </summary>
-        public static bool TryGetLengthAsInt(out int len, bool showMessageOnFail = true)
-        {
-            if (!editor.TryGetLengthAsInt(out len))
-            {
-                WarnFileTooBig(showMessageOnFail);
-                return false;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// if <see cref="IScintillaGateway.GetLength"/> returns a number greater than <see cref="int.MaxValue"/>, return false and set text to an empty string.<br></br>
-        /// Otherwise, return true and set text with <see cref="IScintillaGateway.TryGetText(out string, int)"/>.<br></br>
-        /// If showMessageOnFail, show a message box warning the user that the command could not be executed.
-        /// </summary>
-        public static bool TryGetText(out string text, bool showMessageOnFail = true, int length = -1)
-        {
-            if (length < 0 && !editor.TryGetLengthAsInt(out length))
-            {
-                text = "";
-                WarnFileTooBig(showMessageOnFail);
-                return false;
-            }
-            text = editor.GetText(length);
-            return true;
         }
 
         public static string AssemblyVersionString()
@@ -322,7 +271,7 @@ namespace NppDemo.Utils
             case AskUserWhetherToDoThing.DONT_DO_DONT_ASK:
                 return false;
             case AskUserWhetherToDoThing.ASK_BEFORE_DOING:
-                return Translator.ShowTranslatedMessageBox(messageBoxText,
+                return MessageBox.Show(messageBoxText,
                     messageBoxCaption,
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question
                     ) != DialogResult.No;

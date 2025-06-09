@@ -1,11 +1,13 @@
 ﻿// NPP plugin platform for .Net v0.94.00 by Kasper B. Graversen etc.
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Forms.Integration;
+using System.Windows.Interop;
 using NppDemo.PluginInfrastructure;
-using NppDemo.Utils;
 
 namespace Kbg.NppPluginNET.PluginInfrastructure
 {
@@ -22,10 +24,19 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 		void SetCurrentLanguage(LangType language);
 		bool OpenFile(string path);
 		bool SaveCurrentFile();
+		
 		void ShowDockingForm(System.Windows.Forms.Form form);
 		void HideDockingForm(System.Windows.Forms.Form form);
+
+		void ShowDockingForm(ElementHost control);
+		void HideDockingForm(ElementHost control);
+		void ShowDockingForm(Window window);
+		void HideDockingForm(Window window);
+
 		Color GetDefaultForegroundColor();
 		Color GetDefaultBackgroundColor();
+		System.Windows.Media.Color GetDefaultForeColor();
+		System.Windows.Media.Color GetDefaultBackColor();
 		string GetConfigDirectory();
 		int[] GetNppVersion();
 		string[] GetOpenFileNames();
@@ -38,7 +49,7 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 		/// <param name="formHandle">the Handle attribute of a Windows form</param>
 		void AddModelessDialog(IntPtr formHandle);
 		/// <summary>
-		/// unregister a modelesss form that was registered with AddModelessDialog.<br></br>
+		/// unregister a modeless form that was registered with AddModelessDialog.<br></br>
 		/// This MUST be called in the Dispose method of the form, BEFORE the components of the form are disposed.
 		/// </summary>
 		/// <param name="formHandle">the Handle attribute of a Windows form</param>
@@ -54,18 +65,6 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         /// <param name="numberOfIndicators">number of consecutive indicator IDs to allocate</param>
         /// <returns></returns>
         bool AllocateIndicators(int numberOfIndicators, out int[] indicators);
-
-        /// <summary>
-        /// get the English name of the Notepad++ UI language.<br></br>
-		/// a return value of false indicates that something went wrong and fname should not be used
-        /// </summary>
-        bool TryGetNativeLangName(out string langName);
-
-		/// <summary>
-		/// returns [0] if only the mainView is open, [0, 1] if both the mainView and subView are open, and [1] if only the subView is open.<br></br>
-		/// Thus, GetVisibleViews().Count will return 2 if the Notepad++ window is split into two views, and 1 otherwise.
-		/// </summary>
-		List<int> GetVisibleViews();
 
     }
 
@@ -194,6 +193,28 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 					0, form.Handle);
 		}
 
+		public void HideDockingForm(ElementHost control)
+		{
+			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMHIDE, 0, control.Handle);
+		}
+
+		public void ShowDockingForm(ElementHost control)
+		{
+			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMSHOW, 0, control.Handle);
+		}
+
+		public void HideDockingForm(Window control)
+		{
+			var handle = new WindowInteropHelper(control).Handle;
+			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMHIDE, 0, handle);
+		}
+
+		public void ShowDockingForm(Window control)
+		{
+			var handle = new WindowInteropHelper(control).Handle;
+			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMSHOW, 0, handle);
+		}
+
 		public Color GetDefaultForegroundColor()
 		{
 			var rawColor = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTFOREGROUNDCOLOR, 0, 0);
@@ -204,6 +225,18 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 		{
 			var rawColor = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR, 0, 0);
 			return Color.FromArgb(rawColor & 0xff, (rawColor >> 8) & 0xff, (rawColor >> 16) & 0xff);
+		}
+
+		public System.Windows.Media.Color GetDefaultForeColor()
+		{
+			var rawColor = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTFOREGROUNDCOLOR, 0, 0);
+			return System.Windows.Media.Color.FromRgb((byte)(rawColor & 0xff), (byte)((rawColor >> 8) & 0xff), (byte)((rawColor >> 16) & 0xff));
+		}
+
+		public System.Windows.Media.Color GetDefaultBackColor()
+		{
+			var rawColor = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR, 0, 0);
+			return System.Windows.Media.Color.FromRgb((byte)(rawColor & 0xff), (byte)((rawColor >> 8) & 0xff), (byte)((rawColor >> 16) & 0xff));
 		}
 
 		/// <summary>
@@ -233,26 +266,19 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 			return new int[] { major, minor, bugfix };
         }
 
-        /// <summary>
-		/// Get all open filenames in both views (all in first view, then all in second view)
-		/// </summary>
-		/// <returns></returns>
         public string[] GetOpenFileNames()
         {
-            var bufs = new List<string>();
-            foreach (int view in GetVisibleViews())
+            int nbFile = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETNBOPENFILES, 0, 0);
+
+            using (ClikeStringArray cStrArray = new ClikeStringArray(nbFile, Win32.MAX_PATH))
             {
-                int nbOpenFiles = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETNBOPENFILES, 0, view + 1);
-                for (int ii = 0; ii < nbOpenFiles; ii++)
-                {
-                    IntPtr bufId = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETBUFFERIDFROMPOS, ii, view);
-                    bufs.Add(Npp.notepad.GetFilePath(bufId));
-                }
+                if (Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETOPENFILENAMES, cStrArray.NativePointer, nbFile) != IntPtr.Zero)
+                    return cStrArray.ManagedStringsUnicode.ToArray();
             }
-            return bufs.ToArray();
+            return null;
         }
 
-        public void AddModelessDialog(IntPtr formHandle)
+		public void AddModelessDialog(IntPtr formHandle)
 		{
 			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_MODELESSDIALOG, IntPtr.Zero, formHandle);
 		}
@@ -288,38 +314,6 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 			}
 		}
 
-		public unsafe bool TryGetNativeLangName(out string langName)
-		{
-			langName = "";
-			int fnameLen = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETNATIVELANGFILENAME, IntPtr.Zero, IntPtr.Zero).ToInt32() + 1;
-			if (fnameLen == 1)
-				return false;
-			var fnameArr = new byte[fnameLen];
-			fixed (byte * fnameBuf = fnameArr)
-			{
-				IntPtr fnamePtr = (IntPtr)fnameBuf;
-				Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETNATIVELANGFILENAME, (IntPtr)fnameLen, fnamePtr);
-				langName = Marshal.PtrToStringAnsi(fnamePtr);
-            }
-			if (!string.IsNullOrEmpty(langName) && langName.EndsWith(".xml"))
-			{
-				langName = langName.Substring(0, langName.Length - 4);
-				return true;
-			}
-			return false;
-		}
-
-		public List<int> GetVisibleViews()
-		{
-			var openViews = new List<int>();
-			for (int view = 0; view < 2; view++)
-			{
-				// NPPM_GETCURRENTDOCINDEX(0, view) returns -1 if that view is invisible
-				if ((int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETCURRENTDOCINDEX, 0, view) >= 0)
-					openViews.Add(view);
-			}
-			return openViews;
-		}
     }
 
 	/// <summary>

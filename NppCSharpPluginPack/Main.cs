@@ -17,8 +17,10 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.IO;
-using System.Reflection;
-using NppDemo.JSON_Tools;
+using NppDemo.Views;
+using System.Windows.Forms.Integration;
+using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace Kbg.NppPluginNET
 {
@@ -33,47 +35,26 @@ namespace Kbg.NppPluginNET
         static Icon dockingFormIcon = null;
         private static readonly string sessionFilePath = Path.Combine(PluginConfigDirectory, "savedNppSession.xml");
         private static List<(string filepath, DateTime time, bool opened, int modsSinceOpen)> filesOpenedClosed = new List<(string filepath, DateTime time, bool opened, int modsSinceOpen)>();
-        public static Settings settings = new Settings();
+        public static SettingsWindow settings = new SettingsWindow();
         public static bool bufferFinishedOpening;
         public static int modsSinceBufferOpened = 0;
         public static string activeFname = null;
         public static bool isDocTypeHTML = false;
-        public static bool isShuttingDown = false;
         // indicator things
         private static int firstIndicator = -1;
         private static int lastIndicator = -1;
         // forms
         public static SelectionRememberingForm selectionRememberingForm = null;
-        static internal int IdAboutForm = -1;
+        public static ElementHostEx selectionHost = null;
+        static internal int IdAboutWpf = -1;
         static internal int IdSelectionRememberingForm = -1;
         static internal int IdCloseHtmlTag = -1;
-        // Allowing translation to other languages
-        /// <summary>
-        ///  This listens to the message that Notepad++ sends when its UI language is changed.
-        /// </summary>
-        private static NppListener nppListener = null;
-        /// <summary>
-        /// If the Notepad++ version is higher than 8.6.9, this boolean does not matter.<br></br>
-        /// If this is true, and the Notepad++ version is 8.6.9 or lower, <see cref="nppListener"/> will be initialized.<br></br>
-        /// <b>SETTING THIS TO <c>true</c> COMES AT A REAL PERFORMANCE COST <i>EVEN WHEN YOUR PLUGIN IS NOT IN USE</i></b> (possibly up to 10% of all CPU usage associated with Notepad++)<br></br>
-        /// <i>Do NOT</i> set this to true unless it is very important to you that your plugin's UI language can dynamically adjust to the Notepad++ UI language.<br></br>
-        /// Note that <b>translation will work even if this is <c>false</c></b>, so the only upside of this is that
-        /// the user doesn't need to close Notepad++ and restart it to see their new language preferences reflected in this plugin's UI.
-        /// </summary>
-        private const bool FOLLOW_NPP_UI_LANGUAGE = false;
         #endregion
 
         #region " Startup/CleanUp "
 
         static internal void CommandMenuInit()
         {
-            // first make it so that all references to any third-party dependencies point to the correct location
-            // see https://github.com/oleg-shilo/cs-script.npp/issues/66#issuecomment-1086657272 for more info
-            AppDomain.CurrentDomain.AssemblyResolve += LoadDependency;
-            
-            // load translations at startup
-            Translator.ResetTranslations(true);
-
             // Initialization of your plugin commands
 
             // with function :
@@ -85,53 +66,41 @@ namespace Kbg.NppPluginNET
             //            );
             
             // the "&" before the "D" means that D is an accelerator key for selecting this option 
-            PluginBase.SetCommand(0, Translator.GetTranslatedMenuItem("&Documentation"), Docs);
+            PluginBase.SetCommand(0, "&Documentation", Docs);
             // the "&" before the "b" means that B is an accelerator key for selecting this option 
-            PluginBase.SetCommand(1, Translator.GetTranslatedMenuItem("A&bout"), ShowAboutForm); IdAboutForm = 1;
-            PluginBase.SetCommand(2, Translator.GetTranslatedMenuItem("&Settings"), OpenSettings);
-            PluginBase.SetCommand(3, Translator.GetTranslatedMenuItem("Selection &Remembering Form"), OpenSelectionRememberingForm); IdSelectionRememberingForm = 3;
-            PluginBase.SetCommand(4, Translator.GetTranslatedMenuItem("Run &tests"), TestRunner.RunAll);
+            PluginBase.SetCommand(1, "A&bout", ShowAboutWpf); IdAboutWpf = 1;
+            PluginBase.SetCommand(2 * 2, "&Settings", showSettingsWpf);
+            PluginBase.SetCommand(3 * 2, "Selection &Remembering Form", OpenSelectionRememberingForm); IdSelectionRememberingForm = 3;
+            PluginBase.SetCommand(3 * 2 + 1, "Selection &Remembering Form 2", OpenSelectionControl); IdSelectionRememberingForm = 4;
+            PluginBase.SetCommand(4 * 2, "Run &tests", TestRunner.RunAll);
             
             // this inserts a separator
-            PluginBase.SetCommand(5, Translator.GetTranslatedMenuItem("---"), null);
-            PluginBase.SetCommand(6, Translator.GetTranslatedMenuItem("Use NanInf class for -inf, inf, nan!!"), PrintNanInf);
-            PluginBase.SetCommand(7, Translator.GetTranslatedMenuItem("Hello Notepad++"), HelloFX);
-            PluginBase.SetCommand(8, Translator.GetTranslatedMenuItem("What is Notepad++?"), WhatIsNpp);
+            PluginBase.SetCommand(5 * 2, "---", null);
+            PluginBase.SetCommand(6 * 2, "Use NanInf class for -inf, inf, nan!!", PrintNanInf);
+            PluginBase.SetCommand(7 * 2, "Hello Notepad++", HelloFX);
+            PluginBase.SetCommand(8 * 2, "What is Notepad++?", WhatIsNpp);
 
-            PluginBase.SetCommand(9, Translator.GetTranslatedMenuItem("---"), null);
-            PluginBase.SetCommand(10, Translator.GetTranslatedMenuItem("Current &Full Path"), InsertCurrentFullFilePath);
-            PluginBase.SetCommand(11, Translator.GetTranslatedMenuItem("Current Directory"), InsertCurrentDirectory);
+            PluginBase.SetCommand(9 * 2, "---", null);
+            PluginBase.SetCommand(10 * 2, "Current &Full Path", InsertCurrentFullFilePath);
+            PluginBase.SetCommand(11 * 2, "Current Directory", InsertCurrentDirectory);
 
-            PluginBase.SetCommand(12, Translator.GetTranslatedMenuItem("---"), null);
+            PluginBase.SetCommand(12 * 2, "---", null);
             
-            PluginBase.SetCommand(13, Translator.GetTranslatedMenuItem("Close HTML/&XML tag automatically"), CheckInsertHtmlCloseTag,
+            PluginBase.SetCommand(13 * 2, "Close HTML/&XML tag automatically", CheckInsertHtmlCloseTag,
                 new ShortcutKey(true, true, true, Keys.X), // this adds a keyboard shortcut for Ctrl+Alt+Shift+X
                 settings.close_html_tag // this may check the plugin menu item on startup depending on settings
                 ); IdCloseHtmlTag = 13;
 
-            PluginBase.SetCommand(14, Translator.GetTranslatedMenuItem("---"), null);
-            PluginBase.SetCommand(15, Translator.GetTranslatedMenuItem("Get File Names Demo"), GetFileNamesDemo);
-            PluginBase.SetCommand(16, Translator.GetTranslatedMenuItem("Get Session File Names Demo"), GetSessionFileNamesDemo);
-            PluginBase.SetCommand(17, Translator.GetTranslatedMenuItem("Show files opened and closed this session"), ShowFilesOpenedAndClosedThisSession);
-            PluginBase.SetCommand(18, Translator.GetTranslatedMenuItem("Save Current Session Demo"), SaveCurrentSessionDemo);
-            PluginBase.SetCommand(19, Translator.GetTranslatedMenuItem("Print Scroll and Row Information"), PrintScrollInformation);
-            PluginBase.SetCommand(20, Translator.GetTranslatedMenuItem("Open a pop-up dialog"), OpenPopupDialog);
-            PluginBase.SetCommand(21, Translator.GetTranslatedMenuItem("---"), null);
-            PluginBase.SetCommand(22, Translator.GetTranslatedMenuItem("Allocate indicators demo"), AllocateIndicatorsDemo);
-            if (FOLLOW_NPP_UI_LANGUAGE && (Npp.nppVersion[0] < 8 || (Npp.nppVersion[0] == 8 && (Npp.nppVersion[1] < 6 || (Npp.nppVersion[1] == 6 && Npp.nppVersion[2] <= 9)))))
-            {
-                // start listening to messages that aren't broadcast by the plugin manager (for versions of Notepad++ 8.6.9 or earlier, because later versions have NPPN_NATIVELANGCHANGED)
-                nppListener = new NppListener();
-                nppListener.AssignHandle(PluginBase.nppData._nppHandle);
-            }
-        }
+            PluginBase.SetCommand(14 * 2, "---", null);
+            PluginBase.SetCommand(15 * 2, "Get File Names Demo", GetFileNamesDemo);
+            PluginBase.SetCommand(16 * 2, "Get Session File Names Demo", GetSessionFileNamesDemo);
+            PluginBase.SetCommand(17 * 2, "Show files opened and closed this session", ShowFilesOpenedAndClosedThisSession);
+            PluginBase.SetCommand(18 * 2, "Save Current Session Demo", SaveCurrentSessionDemo);
+            PluginBase.SetCommand(19 * 2, "Print Scroll and Row Information", PrintScrollInformation);
+            PluginBase.SetCommand(20 * 2, "Open a pop-up dialog", OpenPopupDialog);
+            PluginBase.SetCommand(21 * 2, "---", null);
+            PluginBase.SetCommand(22 * 2, "Allocate indicators demo", AllocateIndicatorsDemo);
 
-        private static Assembly LoadDependency(object sender, ResolveEventArgs args)
-        {
-            string assemblyFile = Path.Combine(Npp.pluginDllDirectory, new AssemblyName(args.Name).Name) + ".dll";
-            if (File.Exists(assemblyFile))
-                return Assembly.LoadFrom(assemblyFile);
-            return null;
         }
 
         static internal void SetToolBarIcons()
@@ -139,7 +108,7 @@ namespace Kbg.NppPluginNET
             string iconsToUseChars = settings.toolbar_icons.ToLower();
             var iconInfo = new (Bitmap bmp, Icon icon, Icon iconDarkMode, int id, char representingChar)[]
             {
-                (PluginNetResources.about_form_toolbar_bmp, PluginNetResources.about_form_toolbar, PluginNetResources.about_form_toolbar_darkmode, IdAboutForm, 'a'),
+                (PluginNetResources.about_form_toolbar_bmp, PluginNetResources.about_form_toolbar, PluginNetResources.about_form_toolbar_darkmode, IdAboutWpf, 'a'),
                 (PluginNetResources.selection_remembering_form_toolbar_bmp, PluginNetResources.selection_remembering_form_toolbar, PluginNetResources.selection_remembering_form_toolbar_darkmode, IdSelectionRememberingForm, 's'),
                 (PluginNetResources.close_html_tag_toolbar_bmp, PluginNetResources.close_html_tag_toolbar, PluginNetResources.close_html_tag_toolbar_darkmode, IdCloseHtmlTag, 'h'),
             }
@@ -173,6 +142,8 @@ namespace Kbg.NppPluginNET
         public static void OnNotification(ScNotification notification)
         {
             uint code = notification.Header.Code;
+            NppMsg maybeNppMsg = (NppMsg)code;
+            SciMsg maybeSciMsg = (SciMsg)code;
             // This method is invoked whenever something is happening in notepad++
             // use eg. as
             // if (code == (uint)NppMsg.NPPN_xxx)
@@ -234,49 +205,35 @@ namespace Kbg.NppPluginNET
                 if (bufferModified == activeFname)
                     modsSinceBufferOpened++;
                 break;
-            //if (code > int.MaxValue) // windows messages
-            //{
-            //    int wm = -(int)code;
-            //    }
-            //}
-            // set "Close HTML tag" menu item check at startup
-            case (uint)NppMsg.NPPN_READY:
-                settings.SetXmlMenuItemCheck();
-                break;
-            // reset translations when NPP native language changes
-            case (uint)NppMsg.NPPN_NATIVELANGCHANGED:
-                Translator.ResetTranslations(false);
-                break;
+                //if (code > int.MaxValue) // windows messages
+                //{
+                //    int wm = -(int)code;
+                //    }
+                //}
             }
         }
 
         static internal void PluginCleanUp()
         {
             // dispose of any forms
-            if (selectionRememberingForm != null && !selectionRememberingForm.IsDisposed)
+            if (selectionRememberingForm?.IsDisposed == false)
             {
                 selectionRememberingForm.Close();
                 selectionRememberingForm.Dispose();
             }
-            isShuttingDown = true;
         }
-#endregion
+        #endregion
 
         #region " Menu functions "
 
         /// <summary>
         /// open GitHub repo with the web browser
         /// </summary>
-        private static void Docs()
-        {
-            OpenUrlInWebBrowser(PluginRepository);
-        }
-
-        public static void OpenUrlInWebBrowser(string url)
+        public static void Docs()
         {
             try
             {
-                var ps = new ProcessStartInfo(url)
+                var ps = new ProcessStartInfo(PluginRepository)
                 {
                     UseShellExecute = true,
                     Verb = "open"
@@ -285,11 +242,10 @@ namespace Kbg.NppPluginNET
             }
             catch (Exception ex)
             {
-                Translator.ShowTranslatedMessageBox(
-                    "While attempting to open URL {0} in web browser, got exception\r\n{1}",
-                    "Could not open url in web browser",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error,
-                    2, url, ex);
+                MessageBox.Show(ex.ToString(),
+                    "Could not open documentation",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -394,8 +350,9 @@ The current scroll ratio is {Math.Round(scrollPercentage, 2)}%.
         /// </summary>
         static void CheckInsertHtmlCloseTag()
         {
-            settings.close_html_tag = !settings.close_html_tag;
-            settings.SetXmlMenuItemCheck();
+            bool doCloseTag = settings.close_html_tag;
+            PluginBase.CheckMenuItemToggle(IdCloseHtmlTag, ref doCloseTag);
+            settings.close_html_tag = doCloseTag;
             settings.SaveToIniFile();
         }
 
@@ -462,19 +419,21 @@ The current scroll ratio is {Math.Round(scrollPercentage, 2)}%.
 
         static void GetFileNamesDemo()
         {
-            string[] fileNames = Npp.notepad.GetOpenFileNames();
-            MessageBox.Show(fileNames.Length.ToString(), "Number of opened files:");
-                    
-            foreach (string file in fileNames)
-                MessageBox.Show(file);
-        }
+            int nbFile = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETNBOPENFILES, 0, 0);
+            MessageBox.Show(nbFile.ToString(), "Number of opened files:");
 
+            using (ClikeStringArray cStrArray = new ClikeStringArray(nbFile, Win32.MAX_PATH))
+            {
+                if (Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETOPENFILENAMES, cStrArray.NativePointer, nbFile) != IntPtr.Zero)
+                    foreach (string file in cStrArray.ManagedStringsUnicode) MessageBox.Show(file);
+            }
+        }
         static void GetSessionFileNamesDemo()
         {
             if (!Directory.Exists(PluginConfigDirectory) || !File.Exists(sessionFilePath))
             {
                 MessageBox.Show($"No valid session file at path \"{sessionFilePath}\" in order to point to a valid session file",
-                    "No valid session file",
+                    "No valid session file", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -647,12 +606,8 @@ You will get a compiler error if you do.";
             }
         }
 
-        //form opening stuff
 
-        static void OpenSettings()
-        {
-            settings.ShowDialog();
-        }
+        //form opening stuff
 
         /// <summary>
         /// Apply the appropriate styling
@@ -661,16 +616,20 @@ You will get a compiler error if you do.";
         /// </summary>
         public static void RestyleEverything()
         {
-            if (selectionRememberingForm != null && !selectionRememberingForm.IsDisposed)
+            if (selectionRememberingForm?.IsDisposed == false)
+            {
                 FormStyle.ApplyStyle(selectionRememberingForm, settings.use_npp_styling);
+            }
         }
 
         public static void OpenSelectionRememberingForm()
         {
-            bool wasVisible = selectionRememberingForm != null && selectionRememberingForm.Visible;
+            bool wasVisible = selectionRememberingForm?.Visible == true;
             if (wasVisible)
+            {
                 Npp.notepad.HideDockingForm(selectionRememberingForm);
-            else if (selectionRememberingForm == null || selectionRememberingForm.IsDisposed)
+            }
+            else if (selectionRememberingForm?.IsDisposed != false)
             {
                 selectionRememberingForm = new SelectionRememberingForm();
                 DisplaySelectionRememberingForm(selectionRememberingForm);
@@ -681,7 +640,80 @@ You will get a compiler error if you do.";
             }
         }
 
-        private static void DisplaySelectionRememberingForm(SelectionRememberingForm form)
+        public static void OpenSelectionControl()
+        {
+            try
+            {
+                if (selectionHost == null)
+                {
+                    var control = new SelectionRememberingControl();
+                    // We can't set a window as a Child, so try a UserControl. And ElementHost allows Forms to contain WPF.
+                    selectionHost = new ElementHostEx() { Child = control };
+
+					NppFormHelper.RegisterWindowIfModeless(selectionHost, false);
+					DisplaySelectionRememberingForm(selectionHost, "Remember and set selections");
+				}
+				else
+                {
+					if (selectionHost.Visible)
+                    {
+                        Npp.notepad.HideDockingForm(selectionHost);
+                        //selectionHost.Visible = false; // This is not updated automatically.
+					}
+                    else
+                    {
+                        Npp.notepad.ShowDockingForm(selectionHost);
+						//selectionHost.Visible = true; // This is not updated automatically.
+					}
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, $"Error {ex.GetType().Name}");
+            }
+        }
+
+		private static void DisplaySelectionRememberingForm(ElementHostEx host, string title)
+		{
+			using (Bitmap newBmp = new Bitmap(16, 16))
+			{
+				Graphics g = Graphics.FromImage(newBmp);
+				ColorMap[] colorMap = new ColorMap[1];
+				colorMap[0] = new ColorMap();
+				colorMap[0].OldColor = Color.Fuchsia;
+				colorMap[0].NewColor = Color.FromKnownColor(KnownColor.ButtonFace);
+				ImageAttributes attr = new ImageAttributes();
+				attr.SetRemapTable(colorMap);
+				//g.DrawImage(tbBmp_tbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
+				dockingFormIcon = Icon.FromHandle(newBmp.GetHicon());
+			}
+
+            var _nppTbData = new NppTbData()
+            {
+                hClient = host.Handle,
+                pszName = title,
+				
+                // the dlgDlg should be the index of funcItem where the current function pointer is in
+				// this case is 15.. so the initial value of funcItem[15]._cmdID - not the updated internal one !
+				dlgID = IdSelectionRememberingForm,
+
+				// dock on left
+				uMask = NppTbMsg.DWS_DF_CONT_LEFT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR,
+				hIconTab = (uint)dockingFormIcon.Handle,
+				pszModuleName = PluginName,
+			};
+			
+			IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
+			Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
+
+			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
+
+            //Npp.notepad.ShowDockingForm(host); // Didn't need to be called?
+
+            host.RefreshVisuals();
+		}
+
+		private static void DisplaySelectionRememberingForm(SelectionRememberingForm form)
         {
             using (Bitmap newBmp = new Bitmap(16, 16))
             {
@@ -698,9 +730,7 @@ You will get a compiler error if you do.";
 
             NppTbData _nppTbData = new NppTbData();
             _nppTbData.hClient = form.Handle;
-            string defaultTitle = "Remember and set selections";
-            string formTitle = (Translator.TryGetTranslationAtPath(new string[] { "forms", "SelectionRememberingForm", "title" }, out JNode node) && node.value is string s) ? s : defaultTitle;
-            _nppTbData.pszName = formTitle;
+            _nppTbData.pszName = form.Text;
             // the dlgDlg should be the index of funcItem where the current function pointer is in
             // this case is 15.. so the initial value of funcItem[15]._cmdID - not the updated internal one !
             _nppTbData.dlgID = IdSelectionRememberingForm;
@@ -715,12 +745,18 @@ You will get a compiler error if you do.";
             Npp.notepad.ShowDockingForm(form);
         }
 
-        static void ShowAboutForm()
+        static void ShowAboutWpf()
         {
-            AboutForm aboutForm = new AboutForm();
-            aboutForm.ShowDialog();
-            aboutForm.Focus();
+            AboutWindow window = new AboutWindow();
+            window.ShowDialog();
+            //window.Focus();
         }
+
+        static void showSettingsWpf()
+        {
+			settings = new SettingsWindow();
+            settings.ShowIt();
+		}
 
         static void OpenPopupDialog()
         {

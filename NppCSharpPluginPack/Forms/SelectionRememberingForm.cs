@@ -1,22 +1,29 @@
 ﻿using NppDemo.Utils;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Kbg.NppPluginNET;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace NppDemo.Forms
 {
-    public partial class SelectionRememberingForm : FormBase
+    public partial class SelectionRememberingForm : Form
     {
         public DarkModeTestForm darkModeTestForm;
 
-        public SelectionRememberingForm() : base(false, true)
+        public SelectionRememberingForm()
         {
             InitializeComponent();
+            NppFormHelper.RegisterFormIfModeless(this, false);
             darkModeTestForm = null;
+            FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
         }
 
         private void CopySelectionsToStartEndsButton_Click(object sender, EventArgs e)
@@ -95,6 +102,16 @@ namespace NppDemo.Forms
         private void SelectionRememberingForm_KeyUp(object sender, KeyEventArgs e)
         {
             NppFormHelper.GenericKeyUpHandler(this, sender, e, false);
+        }
+
+        /// <summary>
+        /// suppress the default response to the Tab key
+        /// </summary>
+        protected override bool ProcessDialogKey(Keys keyData)
+        {
+            if (keyData.HasFlag(Keys.Tab)) // this covers Tab with or without modifiers
+                return true;
+            return base.ProcessDialogKey(keyData);
         }
 
         private void TextBox_KeyPress(object sender, KeyPressEventArgs e)

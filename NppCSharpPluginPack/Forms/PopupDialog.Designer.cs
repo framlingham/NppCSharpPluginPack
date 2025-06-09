@@ -44,6 +44,7 @@
             this.TextBox1.Name = "TextBox1";
             this.TextBox1.Size = new System.Drawing.Size(133, 22);
             this.TextBox1.TabIndex = 0;
+            this.TextBox1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.PopupDialog_KeyUp);
             // 
             // Title
             // 
@@ -65,6 +66,7 @@
             this.ComboBox1EnabledCheckBox.Text = "Enable ComboBox1?";
             this.ComboBox1EnabledCheckBox.UseVisualStyleBackColor = true;
             this.ComboBox1EnabledCheckBox.CheckedChanged += new System.EventHandler(this.ComboBox1EnabledCheckBox_CheckedChanged);
+            this.ComboBox1EnabledCheckBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.PopupDialog_KeyUp);
             // 
             // ComboBox1
             // 
@@ -76,6 +78,7 @@
             this.ComboBox1.Name = "ComboBox1";
             this.ComboBox1.Size = new System.Drawing.Size(121, 24);
             this.ComboBox1.TabIndex = 3;
+            this.ComboBox1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.PopupDialog_KeyUp);
             // 
             // TextBox1Label
             // 
@@ -95,6 +98,7 @@
             this.button1.Text = "button1";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.PopupDialog_KeyUp);
             // 
             // ComboBox1Label
             // 

@@ -1,0 +1,156 @@
+﻿<Window x:Class="NppDemo.Views.DarkModeTestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:NppDemo.Views"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" x:Name="root"
+        Title="DarkModeTestWindow" Width="800" Height="450"
+        mc:Ignorable="d">
+	<Grid Margin="10" DataContext="{Binding ElementName=root}">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="2*" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="2*" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+
+		<TextBlock Grid.ColumnSpan="99" VerticalAlignment="Center" FontSize="16"
+		           FontStyle="Italic" FontWeight="Bold" Text="Each control here should look nice."
+		           TextAlignment="Center" />
+
+		<TreeView x:Name="treeView1" Grid.Row="1">
+			<TreeView.Resources>
+				<Style TargetType="Image">
+					<Setter Property="Margin" Value="0,0,4,0" />
+					<Setter Property="Width" Value="16" />
+					<Setter Property="Height" Value="16" />
+				</Style>
+			</TreeView.Resources>
+			<TreeViewItem>
+				<TreeViewItem.Header>
+					<StackPanel Orientation="Horizontal">
+						<Image Source="/CSharpPluginPack;component/Properties/star.png" />
+						<TextBlock Text="TreeView example" />
+					</StackPanel>
+				</TreeViewItem.Header>
+				<TreeViewItem>
+					<TreeViewItem.Header>
+						<StackPanel Orientation="Horizontal">
+							<Image Source="/CSharpPluginPack;component/Properties/star_black.ico" />
+							<TextBlock Text="Node1" />
+						</StackPanel>
+					</TreeViewItem.Header>
+					<TreeViewItem>
+						<TreeViewItem.Header>
+							<StackPanel Orientation="Horizontal">
+								<Image Source="/CSharpPluginPack;component/Properties/star.png" />
+								<TextBlock Text="Node4" />
+							</StackPanel>
+						</TreeViewItem.Header>
+						<TreeViewItem>
+							<TreeViewItem.Header>
+								<StackPanel Orientation="Horizontal">
+									<Image Source="/CSharpPluginPack;component/Properties/star.png" />
+									<TextBlock Text="Node6" />
+								</StackPanel>
+							</TreeViewItem.Header>
+						</TreeViewItem>
+					</TreeViewItem>
+					<TreeViewItem>
+						<TreeViewItem.Header>
+							<StackPanel Orientation="Horizontal">
+								<Image Source="/CSharpPluginPack;component/Properties/star_white.ico" />
+								<TextBlock Text="Node5" />
+							</StackPanel>
+						</TreeViewItem.Header>
+					</TreeViewItem>
+				</TreeViewItem>
+				<TreeViewItem>
+					<TreeViewItem.Header>
+						<StackPanel Orientation="Horizontal">
+							<Image Source="/CSharpPluginPack;component/Properties/star_black.ico" />
+							<TextBlock Text="Node2" />
+						</StackPanel>
+					</TreeViewItem.Header>
+					<TreeViewItem>
+						<TreeViewItem.Header>
+							<StackPanel Orientation="Horizontal">
+								<Image Source="/CSharpPluginPack;component/Properties/star_white.ico" />
+								<TextBlock Text="Node3" />
+							</StackPanel>
+						</TreeViewItem.Header>
+					</TreeViewItem>
+				</TreeViewItem>
+			</TreeViewItem>
+		</TreeView>
+
+		<GroupBox x:Name="groupBox1" Grid.Row="1" Grid.Column="1"
+		          Margin="5" Header="groupBox1">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+
+				<ComboBox x:Name="comboBox1" Margin="5" Padding="5"
+				          SelectedIndex="0">
+					<ComboBoxItem Content="comboBox1" />
+					<ComboBoxItem Content="this" />
+					<ComboBoxItem Content="is" />
+					<ComboBoxItem Content="a" />
+					<ComboBoxItem Content="ComboBox" />
+				</ComboBox>
+
+				<TextBox Grid.Row="1"
+				         Height="{Binding ActualHeight, ElementName=comboBox1}"
+				         Margin="5" VerticalContentAlignment="Center" IsEnabled="False"
+				         Text="disabled TextBox" />
+
+				<TextBox x:Name="textBox1" Grid.Row="2"
+				         Height="{Binding ActualHeight, ElementName=comboBox1}"
+				         Margin="5" VerticalContentAlignment="Center" Text="textBox1" />
+			</Grid>
+		</GroupBox>
+		<ListBox x:Name="listBox1" Grid.Row="1" Grid.Column="2"
+		         SelectionMode="Multiple">
+			<ListBoxItem Content="listBox1" />
+			<ListBoxItem Content="this" />
+			<ListBoxItem Content="is" />
+			<ListBoxItem Content="a" />
+			<ListBoxItem Content="ListBox" />
+		</ListBox>
+
+		<DataGrid Grid.Row="2" Grid.ColumnSpan="99" Margin="0,5"
+		          AutoGenerateColumns="False"
+		          ItemsSource="{Binding DataGridItems}">
+			<DataGrid.Columns>
+				<DataGridTextColumn Width="*"
+				                    Binding="{Binding Column1}"
+				                    Header="Column1" />
+				<DataGridTextColumn Width="2*"
+				                    Binding="{Binding Column2}"
+				                    Header="This is a DataGrid" />
+				<DataGridTextColumn Width="*"
+				                    Binding="{Binding Column3}"
+				                    Header="Column3" />
+			</DataGrid.Columns>
+
+		</DataGrid>
+
+		<Label Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+		       Content="Default label" />
+		<CheckBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center"
+		          VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Does this look good?" />
+
+
+		<Button Grid.Row="4" Grid.Column="1" Margin="5,0"
+		        Padding="5" Click="ShowPopupDialogButton_Click" Content="Show Pop-up dialog" />
+	</Grid>
+</Window>

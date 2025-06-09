@@ -1,11 +1,16 @@
 ﻿using System.Windows.Forms;
+using System.Windows.Forms.Integration;
 using NppDemo.Utils;
+using Input = System.Windows.Input;
 
 namespace NppDemo.Forms
 {
     /// <summary>
     /// various methods that every new form in this app should call.<br></br>
-    /// You can inherit FormBase to simplify this by automatically using all these methods in the recommended default way.
+    /// You may ask, "Wait, why do we have a static class with a bunch of methods everyone needs to call?"<br></br>
+    ///     "Shouldn't this be a subclass of Form, and have all the forms just subclass this?"<br></br>
+    /// To which I answer, NO!<br></br>
+    /// *I TRIED* having a superclass that all my forms inherited from, and the result was a total mess.
     /// </summary>
     public static class NppFormHelper
     {
@@ -19,8 +24,16 @@ namespace NppDemo.Forms
                 e.SuppressKeyPress = true;
         }
 
+        public static void GenericKeyDownHandler(object sender, Input.KeyEventArgs e)
+        {
+            if (e.Key == Input.Key.Enter || e.Key == Input.Key.Escape || e.Key == Input.Key.Tab || e.Key == Input.Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
         /// <summary>
-        /// CALL THIS IN YOUR KeyPress HANDLER FOR ALL TextBoxes and ComboBoxes<br></br>
+        /// CALL THIS IN YOUR KeyDown HANDLER FOR ALL TextBoxes and ComboBoxes<br></br>
         /// suppress annoying ding when user hits tab
         /// </summary>
         public static void TextBoxKeyPressHandler(object sender, KeyPressEventArgs e)
@@ -72,14 +85,64 @@ namespace NppDemo.Forms
         }
 
         /// <summary>
-        /// CALL THIS METHOD IN A KeyUp HANDLER, *UNLESS USING GenericKeyUpHandler ABOVE*<br></br>
-        /// Tab -> go through controls, Shift+Tab -> go through controls backward.<br></br>
-        /// Ignores invisible or disabled controls.
+        /// CALL THIS IN YOUR KeyUp HANDLER FOR ALL CONTROLS (but only add to the form itself *IF NOT isModal*)<br></br>
+        /// Enter presses button,<br></br>
+        /// escape focuses editor (or closes if isModal),<br></br>
+        /// Ctrl+V pastes text into text boxes and combo boxes<br></br>
+        /// if isModal:<br></br>
+        /// - tab goes through controls,<br></br>
+        /// - shift-tab -> go through controls backward<br></br>
         /// </summary>
-        /// <param name="form">the parent form</param>
-        /// <param name="sender">probably a control with a tabstop</param>
-        /// <param name="e">the key event that triggered this</param>
-        public static void GenericTabNavigationHandler(Form form, object sender, KeyEventArgs e)
+        /// <param name="form"></param>
+        /// <param name="isModal">if true, this blocks the parent application until closed. THIS IS ONLY TRUE OF POP-UP DIALOGS</param>
+        public static void GenericKeyUpHandler(System.Windows.Controls.UserControl form, object sender, Input.KeyEventArgs e, bool isModal)
+        {
+            // enter presses button
+            if (e.Key == Input.Key.Enter)
+            {
+                e.Handled = true;
+                if (sender is Button btn)
+                {
+                    // Enter has the same effect as clicking a selected button
+                    btn.PerformClick();
+                }
+                else
+                    PressEnterInTextBoxHandler(sender, isModal);
+            }
+            // Escape ->
+            //     * if this.IsModal (meaning this is a pop-up dialog), close this.
+            //     * otherwise, focus the editor component.
+            else if (e.Key == Input.Key.Escape)
+            {
+                if (isModal)
+                {
+                    MessageBox.Show("Escape pressed, should close form.", "Escape pressed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					//form.Close();
+				}
+				else
+				{
+					Npp.editor.GrabFocus();
+				}
+			}
+            // Tab -> go through controls, Shift+Tab -> go through controls backward
+            else if (e.Key == Input.Key.Tab && !isModal)
+            {
+				// May need to suppress a double-trigger for ComboBoxes? May be a Forms-only issue. (see https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.combobox?view=windowsdesktop-8.0)
+				bool isShifted = Input.Keyboard.Modifiers == Input.ModifierKeys.Shift;
+				var direction = isShifted ? Input.FocusNavigationDirection.Previous : Input.FocusNavigationDirection.Next;
+				((System.Windows.FrameworkElement)sender).MoveFocus(new Input.TraversalRequest(direction));
+            }
+        }
+
+		/// <summary>
+		/// CALL THIS METHOD IN A KeyUp HANDLER, *UNLESS USING GenericKeyUpHandler ABOVE*<br></br>
+		/// Tab -> go through controls, Shift+Tab -> go through controls backward.<br></br>
+		/// Ignores invisible or disabled controls.
+		/// </summary>
+		/// <param name="form">the parent form</param>
+		/// <param name="sender">probably a control with a tabstop</param>
+		/// <param name="e">the key event that triggered this</param>
+		public static void GenericTabNavigationHandler(Form form, object sender, KeyEventArgs e)
         {
             if (sender is TextBox tb && tb.Parent is ListBox)
                 return; // ComboBoxes are secretly two controls in one (see https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.combobox?view=windowsdesktop-8.0)
@@ -139,15 +202,33 @@ namespace NppDemo.Forms
                 Npp.notepad.AddModelessDialog(form.Handle);
         }
 
+        public static void RegisterWindowIfModeless(System.Windows.Window window, bool isModal)
+		{
+            if (!isModal)
+            {
+			    var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+				Npp.notepad.AddModelessDialog(handle);
+            }
+		}
+
+        public static void RegisterWindowIfModeless(ElementHost host, bool isModal)
+		{
+            if (!isModal)
+            {
+			    //var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+				Npp.notepad.AddModelessDialog(host.Handle);
+            }
+		}
 
 
-        /// <summary>
-        /// CALL THIS IN YOUR Dispose(bool disposing) METHOD, INSIDE OF THE ".Designer.cs" FILE<br></br>
-        /// If this was a modeless dialog (i.e., !isModal; a dialog that does not block Notepad++ while open),<br></br>
-        /// call Notepad++ with the NPPM_MODELESSDIALOG message to unregister the form.
-        /// </summary>
-        /// <param name="isModal">if true, this blocks the parent application until closed. THIS IS ONLY TRUE OF POP-UP DIALOGS</param>
-        public static void UnregisterFormIfModeless(Form form, bool isModal)
+
+		/// <summary>
+		/// CALL THIS IN YOUR Dispose(bool disposing) METHOD, INSIDE OF THE ".Designer.cs" FILE<br></br>
+		/// If this was a modeless dialog (i.e., !isModal; a dialog that does not block Notepad++ while open),<br></br>
+		/// call Notepad++ with the NPPM_MODELESSDIALOG message to unregister the form.
+		/// </summary>
+		/// <param name="isModal">if true, this blocks the parent application until closed. THIS IS ONLY TRUE OF POP-UP DIALOGS</param>
+		public static void UnregisterFormIfModeless(Form form, bool isModal)
         {
             if (!form.IsDisposed && !isModal)
                 Npp.notepad.RemoveModelessDialog(form.Handle);

@@ -21,13 +21,10 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         public static readonly int LengthZeroTerminator = "\0".Length;
 
         /// <summary>
-        /// if bytes is null, returns null.<br></br>
-        /// Else, returns bytes decoded from UTF-8 as a string, with all trailing NULL bytes stripped off.
+        /// returns bytes decoded from UTF-8 as a string, with all trailing NULL bytes stripped off.
         /// </summary>
         public static string Utf8BytesToNullStrippedString(byte[] bytes)
         {
-            if (bytes is null)
-                return null;
             int lastNullCharPos = bytes.Length - 1;
             // this only bypasses NULL chars because no char
             // other than NULL can have any 0-valued bytes in UTF-8.
@@ -178,21 +175,9 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         }
 
         /// <summary>Returns the number of bytes in the document. (Scintilla feature 2006)</summary>
-        public long GetLength()
+        public int GetLength()
         {
-            return (long)Win32.SendMessage(scintilla, SciMsg.SCI_GETLENGTH, (IntPtr) Unused, (IntPtr) Unused);
-        }
-
-        public bool TryGetLengthAsInt(out int result)
-        {
-            long longRes = GetLength();
-            if (longRes > int.MaxValue)
-            {
-                result = -1;
-                return false;
-            }
-            result = (int)longRes;
-            return true;
+            return (int)Win32.SendMessage(scintilla, SciMsg.SCI_GETLENGTH, (IntPtr) Unused, (IntPtr) Unused);
         }
 
         /// <summary>Returns the character byte at the position. (Scintilla feature 2007)</summary>
@@ -1784,10 +1769,16 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
             }
         }
 
-        public unsafe string GetText(int length = -1)
+        /// <summary>
+        /// Retrieve all the text in the document.
+        /// Returns number of characters retrieved.
+        /// Result is NUL-terminated.
+        /// (Scintilla feature 2182)
+        /// </summary>
+        public unsafe string GetText(int length=-1)
         {
-            if (length < 1 && !TryGetLengthAsInt(out length))
-                return "";
+            if (length < 1)
+                length = Win32.SendMessage(scintilla, SciMsg.SCI_GETTEXT, (IntPtr)length, (IntPtr)Unused).ToInt32();
             byte[] textBuffer = new byte[length];
             fixed (byte* textPtr = textBuffer)
             {

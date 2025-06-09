@@ -15,14 +15,8 @@ namespace NppDemo.Utils
         {
             base.OnSettingsChanged();
             Main.RestyleEverything();
-        }
-
-        /// <summary>
-        /// check or uncheck the "Close HTML Tag" menu item in the plugins menu (and also on the Notepad++ toolbar)
-        /// </summary>
-        public void SetXmlMenuItemCheck()
-        {
-            Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_SETMENUITEMCHECK, PluginBase._funcItems.Items[Main.IdCloseHtmlTag]._cmdID, close_html_tag ? 1 : 0);
+            // make sure to check the HTML tag plugin menu item if the setting is currently true
+            PluginBase.CheckMenuItem(Main.IdCloseHtmlTag, close_html_tag);
         }
 
         #region MISCELLANEOUS

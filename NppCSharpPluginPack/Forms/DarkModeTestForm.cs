@@ -4,15 +4,17 @@ using NppDemo.Utils;
 
 namespace NppDemo.Forms
 {
-    public partial class DarkModeTestForm : FormBase
+    public partial class DarkModeTestForm : Form
     {
         private SelectionRememberingForm selectionRememberingForm;
 
-        public DarkModeTestForm(SelectionRememberingForm selectionRememberingForm) : base(false, false)
+        public DarkModeTestForm(SelectionRememberingForm selectionRememberingForm)
         {
             InitializeComponent();
+            NppFormHelper.RegisterFormIfModeless(this, false);
             this.selectionRememberingForm = selectionRememberingForm;
             selectionRememberingForm.AddOwnedForm(this);
+            FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
             comboBox1.SelectedIndex = 0;
             DataGridViewRow row = new DataGridViewRow();
             row.CreateCells(dataGridView1);
@@ -43,12 +45,6 @@ namespace NppDemo.Forms
         {
             using (var popupDialog = new PopupDialog())
                 popupDialog.ShowDialog();
-        }
-
-        private void checkBox1_CheckedChanged(object sender, System.EventArgs e)
-        {
-            if (!Translator.HasTranslations) // the translator takes care of the CheckedChanged event if it is active
-                checkBox1.Text = checkBox1.Checked ? "checkBox1 is checked" : "checkBox1 is unchecked";
         }
     }
 }

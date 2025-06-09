@@ -1,25 +1,88 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
+//using System.Windows.Media;
 
 namespace NppDemo.Utils
 {
     public static class FormStyle
     {
-        public static Color SlightlyDarkControl = Color.FromArgb(
+        static FormStyle()
+        {
+            populateStyles();
+        }
+
+
+		public static Color SlightlyDarkControl = Color.FromArgb(
             3 * SystemColors.Control.R / 4 + SystemColors.ControlDark.R / 4,
             3 * SystemColors.Control.G / 4 + SystemColors.ControlDark.G / 4,
             3 * SystemColors.Control.B / 4 + SystemColors.ControlDark.B / 4
         );
 
-        
-        /// <summary>
-        /// Changes the background and text color of the form
-        /// and any child forms to match the editor window.<br></br>
-        /// Fires when the form is first opened
-        /// and also whenever the style is changed.<br></br>
-        /// Heavily based on CsvQuery (https://github.com/jokedst/CsvQuery)
-        /// </summary>
-        public static void ApplyStyle(Control ctrl, bool useNppStyle, bool darkMode = false)
+        public static void ApplyStyle(System.Windows.UIElement element, bool useNppStyle)
+		{
+            if (element == null)
+            {
+                return;
+            }
+            if (!Npp.nppVersionAtLeast8)
+            {
+                useNppStyle = false; // trying to follow editor style looks weird for Notepad++ 7.3.3
+            }
+
+            // The rest from the original code below.
+			if (element is System.Windows.Controls.Control control)
+			{
+                // Update the style's colors
+
+
+                // Attach it!
+                control.Style = _nppControlStyle;
+			}
+		}
+
+        private static System.Windows.Style _nppControlStyle;
+        private static System.Windows.Media.SolidColorBrush _nppBackgroundBrush;
+        private static System.Windows.Media.SolidColorBrush _nppForegroundBrush;
+
+
+		private static void populateStyles()
+        {
+            if (_nppBackgroundBrush == null)
+            {
+                _nppBackgroundBrush = new System.Windows.Media.SolidColorBrush(Npp.notepad.GetDefaultBackColor());
+                _nppBackgroundBrush.Freeze();
+            }
+			if (_nppForegroundBrush == null)
+			{
+				_nppForegroundBrush = new System.Windows.Media.SolidColorBrush(Npp.notepad.GetDefaultForeColor());
+				_nppForegroundBrush.Freeze();
+			}
+			if (_nppControlStyle == null)
+            {
+				_nppControlStyle = new System.Windows.Style(typeof(System.Windows.Controls.Control));
+				_nppControlStyle.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty,
+					_nppBackgroundBrush));
+				_nppControlStyle.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.ForegroundProperty,
+					_nppForegroundBrush));
+			}
+        }
+
+        public static void UpdateStyle(System.Windows.Window window)
+        {
+            
+		}
+
+		/// <summary>
+		/// Changes the background and text color of the form
+		/// and any child forms to match the editor window.<br></br>
+		/// Fires when the form is first opened
+		/// and also whenever the style is changed.<br></br>
+		/// Heavily based on CsvQuery (https://github.com/jokedst/CsvQuery)
+		/// </summary>
+		public static void ApplyStyle(Control ctrl, bool useNppStyle, bool darkMode = false)
         {
             if (ctrl == null || ctrl.IsDisposed) return;
             if (!Npp.nppVersionAtLeast8)
@@ -44,11 +107,10 @@ namespace NppDemo.Utils
                 ctrl.ForeColor = SystemColors.ControlText;
                 foreach (Control child in ctrl.Controls)
                 {
-                    if (child.HasChildren && !(child is Form))
-                        // recursively apply style to children of container controls (GroupBoxes, SplitContainers, etc.)
+                    if (child is GroupBox)
                         ApplyStyle(child, useNppStyle, darkMode);
                     // controls containing text
-                    if (child is TextBox || child is ListBox || child is ComboBox || child is TreeView)
+                    else if (child is TextBox || child is ListBox || child is ComboBox || child is TreeView)
                     {
                         child.BackColor = SystemColors.Window; // white background
                         child.ForeColor = SystemColors.WindowText;
@@ -88,8 +150,7 @@ namespace NppDemo.Utils
             {
                 child.BackColor = backColor;
                 child.ForeColor = foreColor;
-                if (child.HasChildren && !(child is Form))
-                    // recursively apply style to children of container controls (GroupBoxes, SplitContainers, etc.)
+                if (child is GroupBox)
                     ApplyStyle(child, useNppStyle, darkMode);
                 if (child is LinkLabel llbl)
                 {

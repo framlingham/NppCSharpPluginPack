@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿// NPP plugin platform for .Net v0.94.00 by Kasper B. Graversen etc.
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System;
 
 namespace Kbg.NppPluginNET.PluginInfrastructure
 {
@@ -18,7 +19,7 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
             _nativeItems = new List<IntPtr>();
             for (int i = 0; i < num; i++)
             {
-                IntPtr item = Marshal.AllocHGlobal(stringCapacity * 2); // 2 bytes per character, because we're using wchar_t arrays
+                IntPtr item = Marshal.AllocHGlobal(stringCapacity);
                 Marshal.WriteIntPtr(_nativeArray + (i * IntPtr.Size), item);
                 _nativeItems.Add(item);
             }
@@ -65,7 +66,7 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
             }
             catch (Exception e)
             {
-                MessageBox.Show(MethodBase.GetCurrentMethod().ToString() + ": " + e.Message, this.GetType().Name);
+                MessageBox.Show(MethodBase.GetCurrentMethod().ToString() +": "+ e.Message, this.GetType().Name);
             }
         }
         ~ClikeStringArray()

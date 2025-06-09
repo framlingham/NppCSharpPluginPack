@@ -55,15 +55,7 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         void ClearDocumentStyle();
 
         /// <summary>Returns the number of bytes in the document. (Scintilla feature 2006)</summary>
-        long GetLength();
-
-        /// <summary>
-        /// If <see cref="GetLength"/> would return a value greater than <see cref="int.MaxValue"/>, return false and set result to -1.<br></br>
-        /// Otherwise, return true and set result to the number of bytes in the document.
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        bool TryGetLengthAsInt(out int result);
+        int GetLength();
 
         /// <summary>Returns the character byte at the position. (Scintilla feature 2007)</summary>
         int GetCharAt(int pos);
@@ -917,9 +909,9 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         unsafe void SetText(string text);
 
         /// <summary>
-        /// You may wish to use Npp.TryGetLengthAsInt instead, as it indicates when the length of the document is too great.<br></br>
-        /// If length = -1 and the document has more than <see cref="int.MaxValue"/> characters, return "".<br></br>
-        /// Otherwise, returns all the text in the document if length = -1 (or the first length chars of the document).<br></br>
+        /// Retrieve all the text in the document (or the first length chars of the document).
+        /// Returns number of characters retrieved.
+        /// Result is NUL-terminated.
         /// (Scintilla feature 2182)
         /// </summary>
         unsafe string GetText(int length = -1);
