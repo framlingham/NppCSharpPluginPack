@@ -1,23 +1,20 @@
-# NppCSharpPluginPack
+# NppCSharpPluginPack (WPF edition)
 
-[![Continuous Integration](https://github.com/molsonkiko/NppCSharpPluginPack/actions/workflows/CI_build.yml/badge.svg)](https://github.com/molsonkiko/NppCSharpPluginPack/actions/workflows/CI_build.yml)
+[![Continuous Integration for molsonkiko's original plugin](https://github.com/molsonkiko/NppCSharpPluginPack/actions/workflows/CI_build.yml/badge.svg)](https://github.com/molsonkiko/NppCSharpPluginPack/actions/workflows/CI_build.yml)
 
 [![License](http://img.shields.io/badge/License-Apache_2-red.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 
-This is a template for Notepad++ plugins written in C#. The vast majority of the code (certainly all the parts that were really hard to implement) come from [kbilsted's now-archived `NotepadPlusPlusPluginPack.Net`](https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net), with some significant changes, including:
+This is a template for Notepad++ plugins written in C#. The vast majority of the code (certainly all the parts that were really hard to implement) come from molsonkiko's [NppCSharpPluginPack](https://github.com/molsonkiko/NppCSharpPluginPack), which is based on [kbilsted's now-archived `NotepadPlusPlusPluginPack.Net`](https://github.com/kbilsted/NotepadPlusPlusPluginPack.Net), except retargeted to WPF. This template is a work in progress - the migration is not complete and there are issues with keyboard input in docked controls.
 
-1. A simpler architecture in which the [PluginInfrastructure folder](/NppCSharpPluginPack/PluginInfrastructure/) is side-by-side with the rest of the plugin's code, rather than in a separate directory tree.
-2. An example of a [non-docking (pop-up) dialog](/docs/README.md#about-form) opened from the plugin menu, a [docking form](/docs/README.md#selections-remembering-form), and a [non-docking non-pop-up form](/docs/README.md#dark-mode-test-form).
-3. A [settings form](/docs/README.md#settings-form) that makes it easy for the maintainer to add, remove or edit settings.
-4. A template for [automated tests](/docs/README.md#running-tests) that can be run inside Notepad++, including a template for user interface tests that automatically test forms.
-
-If you have any issues, see if [updating to the latest release](https://github.com/molsonkiko/NppCSharpPluginPack/releases) helps, and then feel free to raise an [issue](https://github.com/molsonkiko/NppCSharpPluginPack/issues) on GitHub. Please be sure to include diagnostic information about your system, Notepad++ version, and plugin version (go to `?->Debug Info...` from the Notepad++ main menu).
+If you have any issues and want to help fix them, be my guest.
 
 [Read the docs.](/docs/README.md)
 
 [Read information about the plugin architecture (*some of this may be out of date*)](/PluginPackArchitecture.md)
 
 [View past changes.](/CHANGELOG.md)
+
+# The remainder is unchanged from the original NppCSharpPluginPack:
 
 ## Using the template ##
 
