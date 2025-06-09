@@ -34,8 +34,8 @@
 		        Content="Copy current selections to clipboard&#xa;as list of comma-separated numbers"
 		        KeyDown="keyDownHandler" KeyUp="keyUpHandler" />
 
-		<TextBox x:Name="SelectionStartEndsBox" Grid.Row="4" KeyDown="keyDownHandler"
-		         KeyUp="keyUpHandler"
+		<TextBox x:Name="SelectionStartEndsBox" Grid.Row="4" AcceptsReturn="True"
+		         KeyDown="keyDownHandler" KeyUp="keyUpHandler"
 		         Text="{Binding SelectionText, UpdateSourceTrigger=PropertyChanged}"
 		         TextWrapping="Wrap" />
 		<TextBlock Grid.Row="4" Grid.Column="2"

@@ -202,22 +202,10 @@ namespace NppDemo.Forms
                 Npp.notepad.AddModelessDialog(form.Handle);
         }
 
-        public static void RegisterWindowIfModeless(System.Windows.Window window, bool isModal)
+        public static void RegisterControlIfModeless(ElementHost host, bool isModal)
 		{
             if (!isModal)
-            {
-			    var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
-				Npp.notepad.AddModelessDialog(handle);
-            }
-		}
-
-        public static void RegisterWindowIfModeless(ElementHost host, bool isModal)
-		{
-            if (!isModal)
-            {
-			    //var handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
 				Npp.notepad.AddModelessDialog(host.Handle);
-            }
 		}
 
 

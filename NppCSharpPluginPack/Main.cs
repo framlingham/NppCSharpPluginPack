@@ -649,8 +649,9 @@ You will get a compiler error if you do.";
                     var control = new SelectionRememberingControl();
                     // We can't set a window as a Child, so try a UserControl. And ElementHost allows Forms to contain WPF.
                     selectionHost = new ElementHostEx() { Child = control };
-
-					NppFormHelper.RegisterWindowIfModeless(selectionHost, false);
+                    
+                    // Calling this prevents typing into TextBoxes, but enables keyboard commands like Ctrl+C and Ctrl+V. What to do?
+					//NppFormHelper.RegisterControlIfModeless(selectionHost, false);
 					DisplaySelectionRememberingForm(selectionHost, "Remember and set selections");
 				}
 				else
