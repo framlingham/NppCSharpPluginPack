@@ -30,26 +30,26 @@ namespace NppDemo.Forms
             {
                 e.Handled = true;
             }
-    //        if (Input.Keyboard.Modifiers == Input.ModifierKeys.Control && sender is System.Windows.Controls.TextBox TB)
-    //        {
-				//// Hmmm, not calling RegisterControlIfModeless allows me to get the Control button press,
-    //            // but then the C/V/X press doesn't arrive. This way is probably a dead end then.
-				//if (e.Key == Input.Key.C)
-    //            {
-    //                TB.Copy();
-				//	e.Handled = true;
-				//}
-    //            else if (e.Key == Input.Key.V)
-    //            {
-    //                TB.Paste();
-				//	e.Handled = true;
-				//}
-    //            else if (e.Key == Input.Key.X)
-    //            {
-    //                TB.Cut();
-				//	e.Handled = true;
-				//}
-    //        }
+            //        if (Input.Keyboard.Modifiers == Input.ModifierKeys.Control && sender is System.Windows.Controls.TextBox TB)
+            //        {
+            //// Hmmm, not calling RegisterControlIfModeless allows me to get the Control button press,
+            //            // but then the C/V/X press doesn't arrive. This way is probably a dead end then.
+            //if (e.Key == Input.Key.C)
+            //            {
+            //                TB.Copy();
+            //	e.Handled = true;
+            //}
+            //            else if (e.Key == Input.Key.V)
+            //            {
+            //                TB.Paste();
+            //	e.Handled = true;
+            //}
+            //            else if (e.Key == Input.Key.X)
+            //            {
+            //                TB.Cut();
+            //	e.Handled = true;
+            //}
+            //        }
         }
 
         /// <summary>

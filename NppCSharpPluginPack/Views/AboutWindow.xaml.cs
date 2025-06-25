@@ -27,8 +27,6 @@ namespace NppDemo.Views
 			FormStyle.UpdateStyle(this);
 		}
 
-
-
 		public string Version { get => (string)GetValue(VersionProperty); set => SetValue(VersionProperty, value); }
 		public static readonly DependencyProperty VersionProperty = DependencyProperty.Register(nameof(Version), typeof(string), typeof(AboutWindow), new PropertyMetadata("X.Y.Z.A"));
 

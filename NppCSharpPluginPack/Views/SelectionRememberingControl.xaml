@@ -25,6 +25,8 @@
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="15" />
 			<RowDefinition Height="Auto" />
+			<RowDefinition Height="15" />
+			<RowDefinition Height="450" />
 		</Grid.RowDefinitions>
 
 		<TextBlock Grid.ColumnSpan="99" FontSize="11" FontWeight="Bold"
@@ -54,5 +56,13 @@
 		<Button Grid.Row="12" Grid.ColumnSpan="99" Padding="10"
 		        Click="openDarkModeTestFormButton_Click" Content="Open dark mode test form" KeyDown="keyDownHandler"
 		        KeyUp="keyUpHandler" />
+
+		<ScrollViewer Grid.Row="14" Grid.ColumnSpan="99">
+			<TextBlock Text="{Binding Logs}" TextWrapping="Wrap" />
+		</ScrollViewer>
+
+		<Button Grid.Row="14" Grid.ColumnSpan="99" Width="50"
+		        Height="35" Margin="0,00,20,0" HorizontalAlignment="Right"
+		        VerticalAlignment="Top" Click="buttonClearLogs_Click" Content="Clear" />
 	</Grid>
 </UserControl>

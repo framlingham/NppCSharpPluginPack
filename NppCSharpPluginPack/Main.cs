@@ -654,7 +654,8 @@ You will get a compiler error if you do.";
 					// This part is mentioned in the documentation: https://npp-user-manual.org/docs/plugin-communication/#2036nppm_modelessdialog
 					// It's recommended, so stick with it. Will attempt to identify what message is getting swallowed when typing.
 					NppFormHelper.RegisterControlIfModeless(selectionHost, false);
-					DisplaySelectionRememberingForm(selectionHost, "Remember and set selections");
+
+                    DisplaySelectionRememberingForm(selectionHost, "Remember and set selections");
 				}
 				else
                 {
@@ -711,7 +712,7 @@ You will get a compiler error if you do.";
 
 			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
 
-            //Npp.notepad.ShowDockingForm(host); // Didn't need to be called?
+            Npp.notepad.ShowDockingForm(host); // Didn't need to be called?
 
             host.RefreshVisuals();
 		}

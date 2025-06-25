@@ -321,5 +321,42 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         /// <returns></returns>
         [DllImport("user32")]
         public static extern int GetScrollInfo(IntPtr hwnd, int nBar, ref ScrollInfo scrollInfo);
-    }
+
+		#region SetWindowsHookEx code I almost started to use.
+		//// Not sure I want this stuff, but maybe it will work?
+		//// This stuff is adapted from https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/318804
+		//public delegate int HookProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+		////Declare the hook handle as an int.
+		//static int hHook = 0;
+
+		////Declare the mouse hook constant.
+		////For other hook types, you can obtain these values from Winuser.h in the Microsoft SDK.
+		//public const int WH_MOUSE = 7;
+		//private System.Windows.Forms.Button button1;
+
+		////Declare MouseHookProcedure as a HookProc type.
+		//HookProc MouseHookProcedure;
+
+		////This is the Import for the SetWindowsHookEx function.
+		////Use this function to install a thread-specific hook.
+		//[DllImport("user32", CharSet = CharSet.Auto,
+		// CallingConvention = CallingConvention.StdCall)]
+		//public static extern int SetWindowsHookEx(int idHook, HookProc lpfn,
+		//IntPtr hInstance, int threadId);
+
+		////This is the Import for the UnhookWindowsHookEx function.
+		////Call this function to uninstall the hook.
+		//[DllImport("user32", CharSet = CharSet.Auto,
+		// CallingConvention = CallingConvention.StdCall)]
+		//public static extern bool UnhookWindowsHookEx(int idHook);
+
+		////This is the Import for the CallNextHookEx function.
+		////Use this function to pass the hook information to the next hook procedure in chain.
+		//[DllImport("user32", CharSet = CharSet.Auto,
+		// CallingConvention = CallingConvention.StdCall)]
+		//public static extern int CallNextHookEx(int idHook, int nCode,
+		//IntPtr wParam, IntPtr lParam);
+		#endregion
+	}
 }

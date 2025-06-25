@@ -35,7 +35,40 @@ namespace NppDemo.Views
 			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 
 			IsVisibleChanged += selectionRememberingControl_IsVisibleChanged;
+
+			LogMessage = (message) =>
+			{
+				int maxLength = 2000;
+				message = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}";
+				if (message.Length > 200)
+				{
+					message = message.Substring(0, maxLength) + "...";
+				}
+
+				if (Logs == null)
+				{
+					Logs = message;
+				}
+				else
+				{
+					var all = $"{Logs}\n{message}";
+					if (all.Length > maxLength)
+					{
+						Logs = all.Substring(all.Length - maxLength, maxLength);
+					}
+					else
+					{
+						Logs += Environment.NewLine + message;
+					}
+				}
+			};
 		}
+
+		public static Action<string> LogMessage;
+
+
+		public string Logs { get => (string)GetValue(LogsProperty); set => SetValue(LogsProperty, value); }
+		public static readonly DependencyProperty LogsProperty = DependencyProperty.Register(nameof(Logs), typeof(string), typeof(SelectionRememberingControl), new PropertyMetadata(""));
 
 		public string SelectionText { get => (string)GetValue(SelectionTextProperty); set => SetValue(SelectionTextProperty, value); }
 		public static readonly DependencyProperty SelectionTextProperty = DependencyProperty.Register(nameof(SelectionText), typeof(string), typeof(SelectionRememberingControl), new PropertyMetadata(""));
@@ -113,12 +146,19 @@ namespace NppDemo.Views
 
 		private void keyDownHandler(object sender, KeyEventArgs e)
 		{
+			// This fires whether or not I have called NppFormHelper.RegisterControlIfModeless(selectionHost, false);
+			// But the text box does not add the pressed key as text when it is called.
 			NppFormHelper.GenericKeyDownHandler(sender, e);
 		}
 
 		private void keyUpHandler(object sender, KeyEventArgs e)
 		{
 			NppFormHelper.GenericKeyUpHandler(this, sender, e, false);
+		}
+
+		private void buttonClearLogs_Click(object sender, RoutedEventArgs e)
+		{
+			Logs = string.Empty;
 		}
 	}
 }

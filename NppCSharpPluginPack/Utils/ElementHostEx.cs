@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NppDemo.Views;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,8 @@ namespace NppDemo.Utils
 		{
 			const int WM_SHOWWINDOW = 0x0018;
 			const int WM_SIZE = 0x0005;
+			const int WM_SETFOCUS = 0x0007;
+			const int WM_KILLFOCUS = 0x0008;
 			if (m.Msg == WM_SHOWWINDOW)
 			{
 				Visible = m.WParam != IntPtr.Zero;
@@ -29,6 +32,11 @@ namespace NppDemo.Utils
 			{
 				RefreshVisuals();
 			}
+			else if (m.Msg != WM_SETFOCUS && m.Msg != WM_KILLFOCUS) // Skip logging these for now.
+			{
+				SelectionRememberingControl.LogMessage?.Invoke($"{m.Msg} {m.WParam} {m.LParam}");
+			}
+
 			if (true != Handler?.Invoke(ref m))
 			{
 				base.WndProc(ref m);
