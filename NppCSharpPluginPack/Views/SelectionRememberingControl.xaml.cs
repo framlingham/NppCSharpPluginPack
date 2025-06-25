@@ -38,7 +38,7 @@ namespace NppDemo.Views
 
 			LogMessage = (message) =>
 			{
-				int maxLength = 2000;
+				int maxLength = 2000; // 200000; // This is how many chars I had to show to see all the WM_GETTEXT and WM_GETDLGCODE messages when I typed one 'a' in the text box.
 				message = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}";
 				if (message.Length > 200)
 				{

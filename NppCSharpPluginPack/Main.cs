@@ -45,7 +45,7 @@ namespace Kbg.NppPluginNET
         private static int lastIndicator = -1;
         // forms
         public static SelectionRememberingForm selectionRememberingForm = null;
-        public static ElementHostEx selectionHost = null;
+        public static Form selectionHost = null;
         static internal int IdAboutWpf = -1;
         static internal int IdSelectionRememberingForm = -1;
         static internal int IdCloseHtmlTag = -1;
@@ -648,14 +648,27 @@ You will get a compiler error if you do.";
                 {
                     var control = new SelectionRememberingControl();
                     // We can't set a window as a Child, so try a UserControl. And ElementHost allows Forms to contain WPF.
-                    selectionHost = new ElementHostEx() { Child = control };
+                    var eltHost = new ElementHostEx() { Child = control, Dock = DockStyle.Fill };
+
+                    // Create a WinForms Form to host the ElementHost
+                    selectionHost = new Form
+                    {
+                        Text = "Remember and set selections",
+                        //FormBorderStyle = FormBorderStyle.SizableToolWindow,
+                        //ShowInTaskbar = false,
+                        Dock = DockStyle.Fill,
+                        //TopMost = false,
+                        //StartPosition = FormStartPosition.Manual,
+                        //Size = new Size(800, 1450)
+                    };
+					selectionHost.Controls.Add(eltHost);
 
 					// Calling this prevents typing into TextBoxes, but enables keyboard commands like Ctrl+C and Ctrl+V.
 					// This part is mentioned in the documentation: https://npp-user-manual.org/docs/plugin-communication/#2036nppm_modelessdialog
 					// It's recommended, so stick with it. Will attempt to identify what message is getting swallowed when typing.
-					NppFormHelper.RegisterControlIfModeless(selectionHost, false);
+					NppFormHelper.RegisterFormIfModeless(selectionHost, false);
 
-                    DisplaySelectionRememberingForm(selectionHost, "Remember and set selections");
+                    DisplaySelectionRememberingForm(selectionHost /*selectionHost, "Remember and set selections"*/);
 				}
 				else
                 {
@@ -717,7 +730,7 @@ You will get a compiler error if you do.";
             host.RefreshVisuals();
 		}
 
-		private static void DisplaySelectionRememberingForm(SelectionRememberingForm form)
+		private static void DisplaySelectionRememberingForm(Form form)
         {
             using (Bitmap newBmp = new Bitmap(16, 16))
             {

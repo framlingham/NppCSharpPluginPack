@@ -24,6 +24,7 @@ namespace NppDemo.Utils
 			const int WM_SIZE = 0x0005;
 			const int WM_SETFOCUS = 0x0007;
 			const int WM_KILLFOCUS = 0x0008;
+			const int WM_GETTEXT = 0x000D;
 			if (m.Msg == WM_SHOWWINDOW)
 			{
 				Visible = m.WParam != IntPtr.Zero;
@@ -32,10 +33,13 @@ namespace NppDemo.Utils
 			{
 				RefreshVisuals();
 			}
-			else if (m.Msg != WM_SETFOCUS && m.Msg != WM_KILLFOCUS) // Skip logging these for now.
+			else if (m.Msg != WM_SETFOCUS && m.Msg != WM_KILLFOCUS /*&& m.Msg != WM_GETTEXT && m.Msg != 135*/) // Skip logging these for now.
 			{
 				SelectionRememberingControl.LogMessage?.Invoke($"{m.Msg} {m.WParam} {m.LParam}");
 			}
+
+			//if (m.Msg != WM_KILLFOCUS && m.Msg != WM_SETFOCUS && m.Msg != WM_SHOWWINDOW && m.Msg != WM_SIZE && m.Msg != 0x210 && m.Msg != 0x21 && m.Msg != 0x281 && m.Msg != 0x81 && m.Msg != 0x83 && m.Msg != 0x1 && m.Msg != 0xe && m.Msg != 0xd && m.Msg != 0x3)
+			//{ }
 
 			if (true != Handler?.Invoke(ref m))
 			{
