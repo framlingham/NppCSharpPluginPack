@@ -322,6 +322,14 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         [DllImport("user32")]
         public static extern int GetScrollInfo(IntPtr hwnd, int nBar, ref ScrollInfo scrollInfo);
 
+		#region WM Message codes
+		const int WM_SHOWWINDOW = 0x0018;
+		const int WM_SIZE = 0x0005;
+		const int WM_SETFOCUS = 0x0007;
+		const int WM_KILLFOCUS = 0x0008;
+		const int WM_GETTEXT = 0x000D;
+		#endregion
+
 		#region SetWindowsHookEx code I almost started to use.
 		//// Not sure I want this stuff, but maybe it will work?
 		//// This stuff is adapted from https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/318804

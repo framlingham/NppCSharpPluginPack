@@ -1,4 +1,5 @@
-﻿using NppDemo.Views;
+﻿using NppDemo.PluginInfrastructure;
+using NppDemo.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,30 +21,42 @@ namespace NppDemo.Utils
 
 		protected override void WndProc(ref Message m)
 		{
-			const int WM_SHOWWINDOW = 0x0018;
-			const int WM_SIZE = 0x0005;
-			const int WM_SETFOCUS = 0x0007;
-			const int WM_KILLFOCUS = 0x0008;
-			const int WM_GETTEXT = 0x000D;
-			if (m.Msg == WM_SHOWWINDOW)
+			var msg = (WM)m.Msg; // Get the message ID from the Message struct.
+			if (msg == WM.GETTEXT || msg == WM.CHAR)
 			{
-				Visible = m.WParam != IntPtr.Zero;
-			}
-			else if (m.Msg == WM_SIZE)
-			{
-				RefreshVisuals();
-			}
-			else if (m.Msg != WM_SETFOCUS && m.Msg != WM_KILLFOCUS /*&& m.Msg != WM_GETTEXT && m.Msg != 135*/) // Skip logging these for now.
-			{
-				SelectionRememberingControl.LogMessage?.Invoke($"{m.Msg} {m.WParam} {m.LParam}");
 			}
 
-			//if (m.Msg != WM_KILLFOCUS && m.Msg != WM_SETFOCUS && m.Msg != WM_SHOWWINDOW && m.Msg != WM_SIZE && m.Msg != 0x210 && m.Msg != 0x21 && m.Msg != 0x281 && m.Msg != 0x81 && m.Msg != 0x83 && m.Msg != 0x1 && m.Msg != 0xe && m.Msg != 0xd && m.Msg != 0x3)
-			//{ }
-
+			// Check the base class first, so it can set the result.
 			if (true != Handler?.Invoke(ref m))
 			{
 				base.WndProc(ref m);
+			}
+			// Now we can override the m.Result if needed, or just log the message.
+			// (https://stackoverflow.com/a/18264366/1217612)
+
+			if (msg == WM.SHOWWINDOW)
+			{
+				Visible = m.WParam != IntPtr.Zero;
+			}
+			else if (msg == WM.SIZE)
+			{
+				RefreshVisuals();
+			}
+			else if (msg == WM.GETDLGCODE)
+			{
+				// Just found this that seems to describe this situation exactly! https://stackoverflow.com/q/835878/1217612
+				// What to put here?
+				// Check to see what the Message in m.LParam is?
+				m.Result = (IntPtr)((uint)m.Result | (uint)(DLGC.WANTCHARS | DLGC.WANTARROWS));
+			}
+			
+			if (msg != WM.SETFOCUS && msg != WM.KILLFOCUS && msg != WM.GETTEXT /*&& m.Msg != 135*/) // Skip logging these for now.
+			{
+				SelectionRememberingControl.LogMessage?.Invoke($"{msg} {m.WParam} {m.LParam}");
+				if (msg == WM.GETDLGCODE)
+				{
+					SelectionRememberingControl.LogMessage?.Invoke($"    Result: {(DLGC)m.Result}");
+				}
 			}
 		}
 
