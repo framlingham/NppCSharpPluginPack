@@ -1,5 +1,6 @@
 ﻿using Kbg.NppPluginNET;
 using NppDemo.Forms;
+using NppDemo.PluginInfrastructure;
 using NppDemo.Utils;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -21,9 +23,6 @@ using Path = System.IO.Path;
 
 namespace NppDemo.Views
 {
-	/// <summary>
-	/// Interaction logic for SelectionRememberingControl.xaml
-	/// </summary>
 	public partial class SelectionRememberingControl : UserControl
 	{
 		private DarkModeTestWindow _darkModeTestWindow;
@@ -36,35 +35,29 @@ namespace NppDemo.Views
 
 			IsVisibleChanged += selectionRememberingControl_IsVisibleChanged;
 
-			LogMessage = (message) =>
-			{
-				int maxLength = 2000; // 200000; // This is how many chars I had to show to see all the WM_GETTEXT and WM_GETDLGCODE messages when I typed one 'a' in the text box.
-				message = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}";
-				if (message.Length > 200)
-				{
-					message = message.Substring(0, maxLength) + "...";
-				}
+			// Because https://stackoverflow.com/q/835878/1217612 says we need to, to get typing in TextBoxes. Super! Not needed for separate WPF windows, AFAICT.
+			Loaded += selectionRememberingControl_Loaded;
+		}
 
-				if (Logs == null)
-				{
-					Logs = message;
-				}
-				else
-				{
-					var all = $"{Logs}\n{message}";
-					if (all.Length > maxLength)
-					{
-						Logs = all.Substring(all.Length - maxLength, maxLength);
-					}
-					else
-					{
-						Logs += Environment.NewLine + message;
-					}
-				}
-			};
+		private void selectionRememberingControl_Loaded(object sender, RoutedEventArgs e)
+		{
+			Loaded -= selectionRememberingControl_Loaded;
+
+			var s = PresentationSource.FromVisual(this) as HwndSource;
+			s?.AddHook(new HwndSourceHook(ChildHwndSourceHook));
 		}
 
 		public static Action<string> LogMessage;
+
+		IntPtr ChildHwndSourceHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+		{
+			if ((WM)msg == WM.GETDLGCODE && IsVisible)
+			{
+				handled = true; // This method enables typing in TextBoxes. Hooray!
+				return (IntPtr)(DLGC.WANTCHARS | DLGC.WANTARROWS | DLGC.HASSETSEL);
+			}
+			return IntPtr.Zero;
+		}
 
 
 		public string Logs { get => (string)GetValue(LogsProperty); set => SetValue(LogsProperty, value); }

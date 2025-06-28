@@ -650,37 +650,30 @@ You will get a compiler error if you do.";
                     // We can't set a window as a Child, so try a UserControl. And ElementHost allows Forms to contain WPF.
                     var eltHost = new ElementHostEx() { Child = control, Dock = DockStyle.Fill };
 
-                    // Create a WinForms Form to host the ElementHost
+                    // Create a WinForms Form to host the ElementHost. I think this is what allows us to respond to GETDLGCODE messages.
                     selectionHost = new Form
                     {
                         Text = "Remember and set selections",
-                        //FormBorderStyle = FormBorderStyle.SizableToolWindow,
-                        //ShowInTaskbar = false,
                         Dock = DockStyle.Fill,
-                        //TopMost = false,
-                        //StartPosition = FormStartPosition.Manual,
-                        //Size = new Size(800, 1450)
                     };
 					selectionHost.Controls.Add(eltHost);
 
-					// Calling this prevents typing into TextBoxes, but enables keyboard commands like Ctrl+C and Ctrl+V.
-					// This part is mentioned in the documentation: https://npp-user-manual.org/docs/plugin-communication/#2036nppm_modelessdialog
-					// It's recommended, so stick with it. Will attempt to identify what message is getting swallowed when typing.
+					// Calling this enables keyboard commands like Ctrl+C and Ctrl+V, but prevents typing into modeless dialog TextBoxes unless you call a method like ChildHwndSourceHook in your dialog's Loaded callback.
+					// Pieced together from: https://npp-user-manual.org/docs/plugin-communication/#2036nppm_modelessdialog
+					// and https://stackoverflow.com/q/835878/1217612.
 					NppFormHelper.RegisterFormIfModeless(selectionHost, false);
 
-                    DisplaySelectionRememberingForm(selectionHost /*selectionHost, "Remember and set selections"*/);
+                    DisplaySelectionRememberingForm(selectionHost);
 				}
 				else
                 {
 					if (selectionHost.Visible)
                     {
                         Npp.notepad.HideDockingForm(selectionHost);
-                        //selectionHost.Visible = false; // This is not updated automatically.
 					}
                     else
                     {
                         Npp.notepad.ShowDockingForm(selectionHost);
-						//selectionHost.Visible = true; // This is not updated automatically.
 					}
                 }
             }
@@ -689,46 +682,6 @@ You will get a compiler error if you do.";
                 MessageBox.Show(ex.Message, $"Error {ex.GetType().Name}");
             }
         }
-
-		private static void DisplaySelectionRememberingForm(ElementHostEx host, string title)
-		{
-			using (Bitmap newBmp = new Bitmap(16, 16))
-			{
-				Graphics g = Graphics.FromImage(newBmp);
-				ColorMap[] colorMap = new ColorMap[1];
-				colorMap[0] = new ColorMap();
-				colorMap[0].OldColor = Color.Fuchsia;
-				colorMap[0].NewColor = Color.FromKnownColor(KnownColor.ButtonFace);
-				ImageAttributes attr = new ImageAttributes();
-				attr.SetRemapTable(colorMap);
-				//g.DrawImage(tbBmp_tbTab, new Rectangle(0, 0, 16, 16), 0, 0, 16, 16, GraphicsUnit.Pixel, attr);
-				dockingFormIcon = Icon.FromHandle(newBmp.GetHicon());
-			}
-
-            var _nppTbData = new NppTbData()
-            {
-                hClient = host.Handle,
-                pszName = title,
-				
-                // the dlgDlg should be the index of funcItem where the current function pointer is in
-				// this case is 15.. so the initial value of funcItem[15]._cmdID - not the updated internal one !
-				dlgID = IdSelectionRememberingForm,
-
-				// dock on left
-				uMask = NppTbMsg.DWS_DF_CONT_LEFT | NppTbMsg.DWS_ICONTAB | NppTbMsg.DWS_ICONBAR,
-				hIconTab = (uint)dockingFormIcon.Handle,
-				pszModuleName = PluginName,
-			};
-			
-			IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
-			Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
-
-			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
-
-            Npp.notepad.ShowDockingForm(host); // Didn't need to be called?
-
-            host.RefreshVisuals();
-		}
 
 		private static void DisplaySelectionRememberingForm(Form form)
         {
@@ -758,7 +711,7 @@ You will get a compiler error if you do.";
             IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
             Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
 
-            Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
+            SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
             Npp.notepad.ShowDockingForm(form);
         }
 

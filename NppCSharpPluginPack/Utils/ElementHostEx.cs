@@ -22,17 +22,12 @@ namespace NppDemo.Utils
 		protected override void WndProc(ref Message m)
 		{
 			var msg = (WM)m.Msg; // Get the message ID from the Message struct.
-			if (msg == WM.GETTEXT || msg == WM.CHAR)
-			{
-			}
 
-			// Check the base class first, so it can set the result.
+			// Check the base class first, so it can add to the result if needed (https://stackoverflow.com/a/18264366/1217612).
 			if (true != Handler?.Invoke(ref m))
 			{
 				base.WndProc(ref m);
 			}
-			// Now we can override the m.Result if needed, or just log the message.
-			// (https://stackoverflow.com/a/18264366/1217612)
 
 			if (msg == WM.SHOWWINDOW)
 			{
@@ -41,22 +36,6 @@ namespace NppDemo.Utils
 			else if (msg == WM.SIZE)
 			{
 				RefreshVisuals();
-			}
-			else if (msg == WM.GETDLGCODE)
-			{
-				// Just found this that seems to describe this situation exactly! https://stackoverflow.com/q/835878/1217612
-				// What to put here?
-				// Check to see what the Message in m.LParam is?
-				m.Result = (IntPtr)((uint)m.Result | (uint)(DLGC.WANTCHARS | DLGC.WANTARROWS));
-			}
-			
-			if (msg != WM.SETFOCUS && msg != WM.KILLFOCUS && msg != WM.GETTEXT /*&& m.Msg != 135*/) // Skip logging these for now.
-			{
-				SelectionRememberingControl.LogMessage?.Invoke($"{msg} {m.WParam} {m.LParam}");
-				if (msg == WM.GETDLGCODE)
-				{
-					SelectionRememberingControl.LogMessage?.Invoke($"    Result: {(DLGC)m.Result}");
-				}
 			}
 		}
 
