@@ -11,26 +11,49 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Path = System.IO.Path;
+using Form = System.Windows.Forms.Form;
+using DockStyle = System.Windows.Forms.DockStyle;
 
 namespace NppDemo.Views
 {
 	public partial class SelectionRememberingControl : UserControl
 	{
+		/// <summary>
+		/// This gets your modeless WPF dialog prepared just right, so you can type in it and see it.
+		/// https://community.notepad-plus-plus.org/topic/26930/hi-and-i-m-working-on-a-wpf-fork-of-nppcsharppluginpack/16
+		/// </summary>
+		public static Form MakeModelessDialog(string title)
+		{
+			// The inner WPF content.
+			var innerWpf = new SelectionRememberingControl();
+
+			// The glue layer. ElementHost allows Forms to contain WPF.
+			var middleHost = new ElementHostEx() { Child = innerWpf, Dock = DockStyle.Fill };
+
+			// The outer WinForms Form that allows responding to GETDLGCODE messages.
+			var outerForm = new Form
+			{
+				Text = title,
+				Dock = DockStyle.Fill,
+			};
+			outerForm.Controls.Add(middleHost);
+
+			// Calling this enables keyboard commands like Ctrl+C and Ctrl+V, but prevents typing into modeless dialog TextBoxes unless you call a method like ChildHwndSourceHook in your dialog's Loaded callback.
+			// Pieced together from: https://npp-user-manual.org/docs/plugin-communication/#2036nppm_modelessdialog
+			// and https://stackoverflow.com/q/835878/1217612.
+			NppFormHelper.RegisterFormIfModeless(outerForm, false);
+
+			return outerForm;
+		}
+
 		private DarkModeTestWindow _darkModeTestWindow;
 
 		public SelectionRememberingControl()
 		{
 			InitializeComponent();
-			//FormStyle.UpdateStyle();
 			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 
 			IsVisibleChanged += selectionRememberingControl_IsVisibleChanged;
@@ -47,8 +70,6 @@ namespace NppDemo.Views
 			s?.AddHook(new HwndSourceHook(ChildHwndSourceHook));
 		}
 
-		public static Action<string> LogMessage;
-
 		IntPtr ChildHwndSourceHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
 			if ((WM)msg == WM.GETDLGCODE && IsVisible)
@@ -60,8 +81,7 @@ namespace NppDemo.Views
 		}
 
 
-		public string Logs { get => (string)GetValue(LogsProperty); set => SetValue(LogsProperty, value); }
-		public static readonly DependencyProperty LogsProperty = DependencyProperty.Register(nameof(Logs), typeof(string), typeof(SelectionRememberingControl), new PropertyMetadata(""));
+
 
 		public string SelectionText { get => (string)GetValue(SelectionTextProperty); set => SetValue(SelectionTextProperty, value); }
 		public static readonly DependencyProperty SelectionTextProperty = DependencyProperty.Register(nameof(SelectionText), typeof(string), typeof(SelectionRememberingControl), new PropertyMetadata(""));
@@ -147,11 +167,6 @@ namespace NppDemo.Views
 		private void keyUpHandler(object sender, KeyEventArgs e)
 		{
 			NppFormHelper.GenericKeyUpHandler(this, sender, e, false);
-		}
-
-		private void buttonClearLogs_Click(object sender, RoutedEventArgs e)
-		{
-			Logs = string.Empty;
 		}
 	}
 }

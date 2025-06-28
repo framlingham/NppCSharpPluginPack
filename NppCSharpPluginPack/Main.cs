@@ -642,44 +642,22 @@ You will get a compiler error if you do.";
 
         public static void OpenSelectionControl()
         {
-            try
+            switch (selectionHost?.Visible)
             {
-                if (selectionHost == null)
-                {
-                    var control = new SelectionRememberingControl();
-                    // We can't set a window as a Child, so try a UserControl. And ElementHost allows Forms to contain WPF.
-                    var eltHost = new ElementHostEx() { Child = control, Dock = DockStyle.Fill };
+                case null:
+					// In WPF, a modeless dialog requires a bit more setup:
+					selectionHost = SelectionRememberingControl.MakeModelessDialog(title: "Remember and set selections");
 
-                    // Create a WinForms Form to host the ElementHost. I think this is what allows us to respond to GETDLGCODE messages.
-                    selectionHost = new Form
-                    {
-                        Text = "Remember and set selections",
-                        Dock = DockStyle.Fill,
-                    };
-					selectionHost.Controls.Add(eltHost);
+					DisplaySelectionRememberingForm(selectionHost);
+					break;
 
-					// Calling this enables keyboard commands like Ctrl+C and Ctrl+V, but prevents typing into modeless dialog TextBoxes unless you call a method like ChildHwndSourceHook in your dialog's Loaded callback.
-					// Pieced together from: https://npp-user-manual.org/docs/plugin-communication/#2036nppm_modelessdialog
-					// and https://stackoverflow.com/q/835878/1217612.
-					NppFormHelper.RegisterFormIfModeless(selectionHost, false);
+                case true:
+					Npp.notepad.HideDockingForm(selectionHost);
+					break;
 
-                    DisplaySelectionRememberingForm(selectionHost);
-				}
-				else
-                {
-					if (selectionHost.Visible)
-                    {
-                        Npp.notepad.HideDockingForm(selectionHost);
-					}
-                    else
-                    {
-                        Npp.notepad.ShowDockingForm(selectionHost);
-					}
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, $"Error {ex.GetType().Name}");
+				case false:
+					Npp.notepad.ShowDockingForm(selectionHost);
+					break;
             }
         }
 
