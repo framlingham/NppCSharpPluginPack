@@ -75,7 +75,7 @@ namespace NppDemo.Views
 			if ((WM)msg == WM.GETDLGCODE && IsVisible)
 			{
 				handled = true; // This method enables typing in TextBoxes. Hooray!
-				return (IntPtr)(DLGC.WANTCHARS | DLGC.WANTARROWS | DLGC.HASSETSEL);
+				return (IntPtr)(DLGC.WANTALLKEYS); // better than arrows and chars when you want to accept Return key.
 			}
 			return IntPtr.Zero;
 		}
