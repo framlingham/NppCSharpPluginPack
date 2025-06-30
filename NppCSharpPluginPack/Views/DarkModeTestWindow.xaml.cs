@@ -1,4 +1,5 @@
-﻿using NppDemo.Utils;
+﻿using Kbg.NppPluginNET;
+using NppDemo.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,7 +25,7 @@ namespace NppDemo.Views
 		public DarkModeTestWindow()
 		{
 			InitializeComponent();
-			FormStyle.UpdateStyle(this);
+			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 		}
 
 		internal void GrabFocus()

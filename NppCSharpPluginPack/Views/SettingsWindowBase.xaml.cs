@@ -30,7 +30,6 @@ namespace NppDemo.Views
 		public SettingsWindowBase()
 		{
 			InitializeComponent();
-			FormStyle.UpdateStyle(this);
 
 			setPropertyValuesToDefault();
 

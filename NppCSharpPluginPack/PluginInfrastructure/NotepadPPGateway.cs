@@ -1,6 +1,7 @@
 ﻿// NPP plugin platform for .Net v0.94.00 by Kasper B. Graversen etc.
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -35,6 +36,8 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 		Color GetDefaultBackgroundColor();
 		System.Windows.Media.Color GetDefaultForeColor();
 		System.Windows.Media.Color GetDefaultBackColor();
+		bool IsDarkModeEnabled();
+		unsafe System.Windows.Media.Color[] GetDarkModeColors();
 		string GetConfigDirectory();
 		int[] GetNppVersion();
 		string[] GetOpenFileNames();
@@ -215,13 +218,36 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 
 		public System.Windows.Media.Color GetDefaultForeColor()
 		{
-			var rawColor = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTFOREGROUNDCOLOR, 0, 0);
-			return System.Windows.Media.Color.FromRgb((byte)(rawColor & 0xff), (byte)((rawColor >> 8) & 0xff), (byte)((rawColor >> 16) & 0xff));
+			var rawColor = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTFOREGROUNDCOLOR, 0, 0);
+			return colorRefToColor(rawColor);
 		}
 
 		public System.Windows.Media.Color GetDefaultBackColor()
 		{
-			var rawColor = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR, 0, 0);
+			var rawColor = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR, 0, 0);
+			return colorRefToColor(rawColor);
+		}
+
+		public bool IsDarkModeEnabled()
+		{
+			return Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_ISDARKMODEENABLED, 0, 0).ToInt32() != 0;
+		}
+
+		public unsafe System.Windows.Media.Color[] GetDarkModeColors()
+		{
+			// TODO: When Notepad++ is updated, this size may need updating!
+			const int NB_DARK_COLOR_REFS = 12;
+			var colorRefs = new int[NB_DARK_COLOR_REFS];
+			fixed (int* colorRefsPtr = colorRefs)
+			{
+				IntPtr success = Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_GETDARKMODECOLORS, NB_DARK_COLOR_REFS * sizeof(int), (IntPtr)colorRefsPtr);
+				return colorRefs.Select(cr => colorRefToColor((IntPtr)cr)).ToArray();
+			}
+		}
+
+		private static System.Windows.Media.Color colorRefToColor(IntPtr colorRef)
+		{
+			int rawColor = (int)colorRef;
 			return System.Windows.Media.Color.FromRgb((byte)(rawColor & 0xff), (byte)((rawColor >> 8) & 0xff), (byte)((rawColor >> 16) & 0xff));
 		}
 

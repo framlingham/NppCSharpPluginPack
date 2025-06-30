@@ -497,11 +497,11 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         /// </summary>
         NPPM_GETEDITORDEFAULTFOREGROUNDCOLOR = Constants.NPPMSG + 90,
 
-        /// <summary>
-        /// INT NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR(0, 0)
-        /// Return: current editor default background color. You should convert the returned value in COLORREF
-        /// </summary>
-        NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR = Constants.NPPMSG + 91,
+		/// <summary>
+		/// INT NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR(0, 0)
+		/// Return: current editor default background color. You should convert the returned value in COLORREF
+		/// </summary>
+		NPPM_GETEDITORDEFAULTBACKGROUNDCOLOR = Constants.NPPMSG + 91,
 
         /// <summary>
         /// VOID NPPM_SETSMOOTHFONT(0, BOOL setSmoothFontOrNot)
@@ -573,21 +573,43 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
         /// </summary>
         NPPM_ADDTOOLBARICON_FORDARKMODE = Constants.NPPMSG + 101,
 
-        // BOOL NPPM_ALLOCATEINDICATOR(int numberRequested, int* startNumber)
-        // Allocates an indicator number to a plugin: if a plugin needs to add an indicator,
-        // it has to use this message to get the indicator number, in order to prevent a conflict with the other plugins.
-        // wParam[in]: numberRequested is the number of ID you request for the reservation
-        // lParam[out]: startNumber will be set to the initial command ID if successful
-        // Return TRUE if successful, FALSE otherwise. startNumber will also be set to 0 if unsuccessful
-        //
-        // Example: If a plugin needs 1 indicator ID, the following code can be used :
-        //
-        //    int idBegin;
-        //    BOOL isAllocatedSuccessful = ::SendMessage(nppData._nppHandle, NPPM_ALLOCATEINDICATOR, 1, &idBegin);
-        //
-        // if isAllocatedSuccessful is TRUE, and value of idBegin is 7
-        // then indicator ID 7 is preserved by Notepad++, and it is safe to be used by the plugin.
-        NPPM_ALLOCATEINDICATOR = Constants.NPPMSG + 113,
+		/// <summary>
+		/// BOOL NPPM_ISDARKMODEENABLED(0, 0)
+		/// Get Notepad++ Dark Mode status (ON or OFF).
+		/// wParam: 0 (not used)
+		/// lParam: 0 (not used)
+		/// Return TRUE if Dark Mode is enable, otherwise FALSE
+		/// https://npp-user-manual.org/docs/plugin-communication/#2131nppm_isdarkmodeenabled
+		/// https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/src/MISC/PluginsManager/Notepad_plus_msgs.h#L851
+		/// </summary>
+		NPPM_ISDARKMODEENABLED = Constants.NPPMSG + 107,
+
+		/// <summary>
+		/// BOOL NPPM_GETDARKMODECOLORS (size_t cbSize, NppDarkMode::Colors* returnColors)
+		/// Get the colors used in Dark Mode.
+		/// wParam[in]: cbSize must be filled with sizeof(NppDarkMode::Colors).
+		/// lParam[out]: returnColors must be a pre-allocated NppDarkMode::Colors struct.
+		/// Return TRUE when successful, FALSE otherwise.
+		/// https://npp-user-manual.org/docs/plugin-communication/#2132nppm_getdarkmodecolors
+		/// https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/src/MISC/PluginsManager/Notepad_plus_msgs.h#L858
+		/// </summary>
+		NPPM_GETDARKMODECOLORS = Constants.NPPMSG + 108,
+
+		// BOOL NPPM_ALLOCATEINDICATOR(int numberRequested, int* startNumber)
+		// Allocates an indicator number to a plugin: if a plugin needs to add an indicator,
+		// it has to use this message to get the indicator number, in order to prevent a conflict with the other plugins.
+		// wParam[in]: numberRequested is the number of ID you request for the reservation
+		// lParam[out]: startNumber will be set to the initial command ID if successful
+		// Return TRUE if successful, FALSE otherwise. startNumber will also be set to 0 if unsuccessful
+		//
+		// Example: If a plugin needs 1 indicator ID, the following code can be used :
+		//
+		//    int idBegin;
+		//    BOOL isAllocatedSuccessful = ::SendMessage(nppData._nppHandle, NPPM_ALLOCATEINDICATOR, 1, &idBegin);
+		//
+		// if isAllocatedSuccessful is TRUE, and value of idBegin is 7
+		// then indicator ID 7 is preserved by Notepad++, and it is safe to be used by the plugin.
+		NPPM_ALLOCATEINDICATOR = Constants.NPPMSG + 113,
 
         RUNCOMMAND_USER = Constants.WM_USER + 3000,
         NPPM_GETFULLCURRENTPATH = RUNCOMMAND_USER + FULL_CURRENT_PATH,

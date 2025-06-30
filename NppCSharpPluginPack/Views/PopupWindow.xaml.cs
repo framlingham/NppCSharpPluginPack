@@ -1,4 +1,5 @@
-﻿using NppDemo.Utils;
+﻿using Kbg.NppPluginNET;
+using NppDemo.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace NppDemo.Views
 		public PopupWindow()
 		{
 			InitializeComponent();
-			FormStyle.UpdateStyle(this);
+			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 		}
 
 		public string TextFromBox { get => (string)GetValue(TextFromBoxProperty); set => SetValue(TextFromBoxProperty, value); }

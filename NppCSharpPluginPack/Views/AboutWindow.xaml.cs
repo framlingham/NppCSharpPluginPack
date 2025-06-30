@@ -1,4 +1,5 @@
-﻿using NppDemo.Utils;
+﻿using Kbg.NppPluginNET;
+using NppDemo.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace NppDemo.Views
 		{
 			InitializeComponent();
 			Version = Npp.AssemblyVersionString();
-			FormStyle.UpdateStyle(this);
+			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 		}
 
 		public string Version { get => (string)GetValue(VersionProperty); set => SetValue(VersionProperty, value); }

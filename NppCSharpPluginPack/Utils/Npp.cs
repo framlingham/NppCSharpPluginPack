@@ -252,19 +252,19 @@ namespace NppDemo.Utils
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Based on the value of askUser, do one of three things:<br></br>
-        /// DONT_DO_DONT_ASK: return false (don't do the thing)<br></br>
-        /// ASK_BEFORE_DOING:<br></br>
-        /// 1. show a Yes/No message box with text messageBoxText and caption messageBoxCaption.<br></br>
-        /// 2. if and only if the user clicks Yes, return true.<br></br>
-        /// DO_WITHOUT_ASKING: return true (do the thing without asking)
-        /// </summary>
-        /// <param name="askUser">whether to ask user</param>
-        /// <param name="messageBoxText">text of message box (if and only if askUser = ASK_BEFORE_DOING</param>
-        /// <param name="messageBoxCaption">caption of message box (if and only if askUser = ASK_BEFORE_DOING</param>
-        /// <returns></returns>
-        public static bool AskBeforeDoingSomething(AskUserWhetherToDoThing askUser, string messageBoxText, string messageBoxCaption)
+		/// <summary>
+		/// Based on the value of askUser, do one of three things:<br></br>
+		/// DONT_DO_DONT_ASK: return false (don't do the thing)<br></br>
+		/// ASK_BEFORE_DOING:<br></br>
+		/// 1. show a Yes/No message box with text messageBoxText and caption messageBoxCaption.<br></br>
+		/// 2. if and only if the user clicks Yes, return true.<br></br>
+		/// DO_WITHOUT_ASKING: return true (do the thing without asking)
+		/// </summary>
+		/// <param name="askUser">whether to ask user</param>
+		/// <param name="messageBoxText">text of message box (if and only if askUser = ASK_BEFORE_DOING</param>
+		/// <param name="messageBoxCaption">caption of message box (if and only if askUser = ASK_BEFORE_DOING</param>
+		/// <returns></returns>
+		public static bool AskBeforeDoingSomething(AskUserWhetherToDoThing askUser, string messageBoxText, string messageBoxCaption)
         {
             switch (askUser)
             {
