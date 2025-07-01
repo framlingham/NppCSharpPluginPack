@@ -6,6 +6,7 @@ using System.Windows.Data;
 using System.Windows.Forms;
 //using System.Windows.Media;
 using Brush = System.Windows.Media.SolidColorBrush;
+using wColor = System.Windows.Media.Color;
 
 namespace NppDemo.Utils
 {
@@ -27,18 +28,20 @@ namespace NppDemo.Utils
 		private static System.Windows.Style _nppControlStyle;
 		private static Brush _nppBackgroundBrush;
 		private static Brush _nppForegroundBrush;
-		private static System.Windows.Media.Color[] _darkModeColors;
-		public static System.Windows.Media.Color GetDarkModeColor(int i) => _darkModeColors[i];
+        private static Brush _mostlyBackgroundBrush;
+		private static wColor[] _darkModeColors;
+		public static wColor GetDarkModeColor(int i) => _darkModeColors[i];
+
+
+        private static wColor interpolateColor(double t, wColor t0, wColor t1)
+        {
+            return wColor.FromRgb((byte)(t0.R + t * (t1.R - t0.R)),
+                                  (byte)(t0.G + t * (t1.G - t0.G)),
+                                  (byte)(t0.B + t * (t1.B - t0.B)));
+		}
 
 		private static void populateStyles()
 		{
-			_nppBackgroundBrush ??= makeBrush(Npp.notepad.GetDefaultBackColor());
-			_nppForegroundBrush ??= makeBrush(Npp.notepad.GetDefaultForeColor());
-			_nppControlStyle ??= makeStyle(typeof(System.Windows.Controls.Control),
-					null,
-					(System.Windows.Controls.Control.BackgroundProperty, _nppBackgroundBrush),
-					(System.Windows.Controls.Control.ForegroundProperty, _nppForegroundBrush));
-			_darkModeColors = Npp.notepad.GetDarkModeColors();
 			/*
             [0] background
             [1] softerBackground
@@ -55,76 +58,96 @@ namespace NppDemo.Utils
              */
 		}
 
-		public static void ApplyStyle(System.Windows.UIElement element, bool useNppStyle)
-		{
-            if (element == null)
-            {
-                return;
-            }
+        public static void ApplyStyle(System.Windows.UIElement element, bool useNppStyle)
+        {
             if (!Npp.nppVersionAtLeast8)
             {
                 useNppStyle = false; // trying to follow editor style looks weird for Notepad++ 7.3.3
             }
 
-            // The rest from the original code below.
-			if (element is System.Windows.FrameworkElement control)
-			{
-                // Put the _nppControlStyle in the control's resource dictionary:
-                control.Resources.Add(_nppBaseStyleKey, _nppControlStyle);
-                var buttonStyle = makeStyle(typeof(System.Windows.Controls.Button), _nppControlStyle);
-                var textBoxStyle = makeStyle(typeof(System.Windows.Controls.TextBox), _nppControlStyle);
-                var labelStyle = makeStyle(typeof(System.Windows.Controls.Label), _nppControlStyle);
-                var checkBoxStyle = makeStyle(typeof(System.Windows.Controls.CheckBox), _nppControlStyle);
 
-				// Update the style's colors (before we add them, so that the style is not frozen yet):
-				if (Npp.notepad.IsDarkModeEnabled())
-				{
-                    var softBg = makeBrush(_darkModeColors[1]);
-					var hotBg = makeBrush(_darkModeColors[2]);
-                    var pureBg = makeBrush(_darkModeColors[3]);
-                    textBoxStyle.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
-                    buttonStyle.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
+			var foreColor = Npp.notepad.GetDefaultForeColor();
+			_nppForegroundBrush = makeBrush(foreColor);
 
-					#region All this to override the basic WPF Button's mouse-over highlighting color.
-                    // I'm glad I had AI to help with this or else this would have taken way longer.
-					var buttonTemplate = new System.Windows.Controls.ControlTemplate(typeof(System.Windows.Controls.Button));
-					var border = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Border));
+			var backColor = Npp.notepad.GetDefaultBackColor();
+			_nppBackgroundBrush = makeBrush(backColor);
 
-					border.SetValue(System.Windows.Controls.Border.BackgroundProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Border.BackgroundProperty));
-                    border.SetValue(System.Windows.Controls.Border.BorderThicknessProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderThicknessProperty));
-					border.SetValue(System.Windows.Controls.Border.BorderBrushProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderBrushProperty));
-					border.SetValue(System.Windows.Controls.Border.PaddingProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.PaddingProperty));
+			var backishColor = interpolateColor(0.25, backColor, foreColor);
+			_mostlyBackgroundBrush = makeBrush(backishColor);
 
-					var content = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
-                    content.SetValue(System.Windows.FrameworkElement.HorizontalAlignmentProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.HorizontalContentAlignmentProperty));
-					border.AppendChild(content);
-					buttonTemplate.VisualTree = border;
-					buttonStyle.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.TemplateProperty, buttonTemplate));
+			_nppControlStyle = makeStyle(typeof(System.Windows.Controls.Control),
+					null,
+					(System.Windows.Controls.Control.BackgroundProperty, _nppBackgroundBrush),
+					(System.Windows.Controls.Control.ForegroundProperty, _nppForegroundBrush),
+					(System.Windows.Controls.Control.BorderBrushProperty, _mostlyBackgroundBrush));
+			_darkModeColors = Npp.notepad.GetDarkModeColors();
 
-					buttonStyle.Triggers.Add(new System.Windows.Trigger
-					{
-						Property = System.Windows.UIElement.IsMouseOverProperty,
-						Value = true,
-						Setters =
-						{
-							new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, hotBg)
-						}
-					});
-					#endregion Phew!
-				}
+			bool darkModeIsOn = Npp.notepad.IsDarkModeEnabled();
+            var control = (System.Windows.FrameworkElement)element; // Required to put styles in Resources.
+            control.Resources.Add(_nppBaseStyleKey, _nppControlStyle); // This doesn't do anything for UserControl...
+			control.Style = _nppControlStyle; // ... so attach this one directly.
 
-				// Now add them.
-				control.Resources.Add(typeof(System.Windows.Controls.Button), buttonStyle);
-                control.Resources.Add(typeof(System.Windows.Controls.TextBox), textBoxStyle);
-                control.Resources.Add(typeof(System.Windows.Controls.Label), labelStyle);
-                control.Resources.Add(typeof(System.Windows.Controls.CheckBox), checkBoxStyle);
+			var softBg = makeBrush(_darkModeColors[1]);
+			var hotBg = makeBrush(_darkModeColors[2]);
+			var pureBg = makeBrush(_darkModeColors[3]);
 
-				// Attach this one directly. For some reason, a style for UserControl doesn't take effect.
-				control.Style = _nppControlStyle;
+			void makeAndSetStyle(Type type, Action<System.Windows.Style> darkModeBits = null)
+            {
+                var style = makeStyle(type, _nppControlStyle);
+                if (darkModeIsOn)
+                {
+					// Used to update the style's colors before we add them, so that the style is not frozen yet.
+					darkModeBits?.Invoke(style);
+                }
+                control.Resources.Add(type, style);
 			}
-		}
 
-		private static Brush makeBrush(System.Windows.Media.Color color)
+            makeAndSetStyle(typeof(System.Windows.Controls.CheckBox));
+            makeAndSetStyle(typeof(System.Windows.Controls.ComboBox));
+            makeAndSetStyle(typeof(System.Windows.Controls.DataGrid));
+            makeAndSetStyle(typeof(System.Windows.Controls.Label));
+            makeAndSetStyle(typeof(System.Windows.Controls.ListBox));
+            makeAndSetStyle(typeof(System.Windows.Controls.TextBox),
+                style =>
+                {
+                    style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
+                });
+            makeAndSetStyle(typeof(System.Windows.Controls.TreeView));
+            makeAndSetStyle(typeof(System.Windows.Controls.Button),
+                style =>
+                {
+                    style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
+
+                    #region All this to override the basic WPF Button's mouse-over highlighting color.
+                    // I'm glad I had AI to help with this or else this would have taken way longer.
+                    var buttonTemplate = new System.Windows.Controls.ControlTemplate(typeof(System.Windows.Controls.Button));
+                    var border = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Border));
+
+                    border.SetValue(System.Windows.Controls.Border.BackgroundProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Border.BackgroundProperty));
+                    border.SetValue(System.Windows.Controls.Border.BorderThicknessProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderThicknessProperty));
+                    border.SetValue(System.Windows.Controls.Border.BorderBrushProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderBrushProperty));
+                    border.SetValue(System.Windows.Controls.Border.PaddingProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.PaddingProperty));
+
+                    var content = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
+                    content.SetValue(System.Windows.FrameworkElement.HorizontalAlignmentProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.HorizontalContentAlignmentProperty));
+                    border.AppendChild(content);
+                    buttonTemplate.VisualTree = border;
+                    style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.TemplateProperty, buttonTemplate));
+
+                    style.Triggers.Add(new System.Windows.Trigger
+                    {
+                        Property = System.Windows.UIElement.IsMouseOverProperty,
+                        Value = true,
+                        Setters =
+                        {
+                            new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, hotBg)
+                        }
+                    });
+                    #endregion Phew!
+                });
+        }
+
+		private static Brush makeBrush(wColor color)
         {
             Brush brush = new(color);
             brush.Freeze(); // Make immutable for performance.
@@ -139,19 +162,6 @@ namespace NppDemo.Utils
 			}
             return style;
 		}
-
-		private static System.Windows.FrameworkElement addStyle(System.Windows.FrameworkElement element, Type type, params (System.Windows.DependencyProperty, object)[] setterBits)
-        {
-            element.Resources.Add(type, makeStyle(type, null, setterBits));
-            return element;
-        }
-
-        private static System.Windows.Style addBasedStyle(System.Windows.FrameworkElement element, Type type, System.Windows.Style baseStyle, params (System.Windows.DependencyProperty, object)[] setterBits)
-        {
-            var style = makeStyle(type, baseStyle, setterBits);
-			element.Resources.Add(type, style);
-            return style;
-        }
 
 		/// <summary>
 		/// Changes the background and text color of the form
