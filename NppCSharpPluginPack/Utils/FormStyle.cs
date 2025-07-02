@@ -91,9 +91,9 @@ namespace NppDemo.Utils
 			var hotBg = makeBrush(_darkModeColors[2]);
 			var pureBg = makeBrush(_darkModeColors[3]);
 
-			void makeAndSetStyle(Type type, Action<System.Windows.Style> darkModeBits = null)
-            {
-                var style = makeStyle(type, _nppControlStyle);
+			void makeAndSetStyle(Type type, System.Windows.Style baseStyle, Action<System.Windows.Style> darkModeBits = null)
+			{
+                var style = makeStyle(type, baseStyle);
                 if (darkModeIsOn)
                 {
 					// Used to update the style's colors before we add them, so that the style is not frozen yet.
@@ -102,49 +102,51 @@ namespace NppDemo.Utils
                 control.Resources.Add(type, style);
 			}
 
-            makeAndSetStyle(typeof(System.Windows.Controls.CheckBox));
-            makeAndSetStyle(typeof(System.Windows.Controls.ComboBox));
-            makeAndSetStyle(typeof(System.Windows.Controls.DataGrid));
-            makeAndSetStyle(typeof(System.Windows.Controls.Label));
-            makeAndSetStyle(typeof(System.Windows.Controls.ListBox));
-            makeAndSetStyle(typeof(System.Windows.Controls.TextBox),
-                style =>
+            makeAndSetStyle(typeof(System.Windows.Controls.CheckBox), _nppControlStyle);
+            makeAndSetStyle(typeof(System.Windows.Controls.ComboBox), _nppControlStyle);
+            makeAndSetStyle(typeof(System.Windows.Controls.DataGrid), _nppControlStyle);
+            makeAndSetStyle(typeof(System.Windows.Controls.Label), _nppControlStyle);
+            makeAndSetStyle(typeof(System.Windows.Controls.ListBox), _nppControlStyle);
+            makeAndSetStyle(typeof(System.Windows.Controls.TextBlock), null, style =>
+            {
+				style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.TextBlock.ForegroundProperty, _nppForegroundBrush));
+			});
+            makeAndSetStyle(typeof(System.Windows.Controls.TextBox), _nppControlStyle, style =>
+            {
+                style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
+            });
+            makeAndSetStyle(typeof(System.Windows.Controls.TreeView), _nppControlStyle);
+            makeAndSetStyle(typeof(System.Windows.Controls.Button), _nppControlStyle, style =>
+            {
+                style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
+
+                #region All this to override the basic WPF Button's mouse-over highlighting color.
+                // I'm glad I had AI to help with this or else this would have taken way longer.
+                var buttonTemplate = new System.Windows.Controls.ControlTemplate(typeof(System.Windows.Controls.Button));
+                var border = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Border));
+
+                border.SetValue(System.Windows.Controls.Border.BackgroundProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Border.BackgroundProperty));
+                border.SetValue(System.Windows.Controls.Border.BorderThicknessProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderThicknessProperty));
+                border.SetValue(System.Windows.Controls.Border.BorderBrushProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderBrushProperty));
+                border.SetValue(System.Windows.Controls.Border.PaddingProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.PaddingProperty));
+
+                var content = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
+                content.SetValue(System.Windows.FrameworkElement.HorizontalAlignmentProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.HorizontalContentAlignmentProperty));
+                border.AppendChild(content);
+                buttonTemplate.VisualTree = border;
+                style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.TemplateProperty, buttonTemplate));
+
+                style.Triggers.Add(new System.Windows.Trigger
                 {
-                    style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
-                });
-            makeAndSetStyle(typeof(System.Windows.Controls.TreeView));
-            makeAndSetStyle(typeof(System.Windows.Controls.Button),
-                style =>
-                {
-                    style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, softBg));
-
-                    #region All this to override the basic WPF Button's mouse-over highlighting color.
-                    // I'm glad I had AI to help with this or else this would have taken way longer.
-                    var buttonTemplate = new System.Windows.Controls.ControlTemplate(typeof(System.Windows.Controls.Button));
-                    var border = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Border));
-
-                    border.SetValue(System.Windows.Controls.Border.BackgroundProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Border.BackgroundProperty));
-                    border.SetValue(System.Windows.Controls.Border.BorderThicknessProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderThicknessProperty));
-                    border.SetValue(System.Windows.Controls.Border.BorderBrushProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.BorderBrushProperty));
-                    border.SetValue(System.Windows.Controls.Border.PaddingProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.PaddingProperty));
-
-                    var content = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
-                    content.SetValue(System.Windows.FrameworkElement.HorizontalAlignmentProperty, new System.Windows.TemplateBindingExtension(System.Windows.Controls.Control.HorizontalContentAlignmentProperty));
-                    border.AppendChild(content);
-                    buttonTemplate.VisualTree = border;
-                    style.Setters.Add(new System.Windows.Setter(System.Windows.Controls.Control.TemplateProperty, buttonTemplate));
-
-                    style.Triggers.Add(new System.Windows.Trigger
+                    Property = System.Windows.UIElement.IsMouseOverProperty,
+                    Value = true,
+                    Setters =
                     {
-                        Property = System.Windows.UIElement.IsMouseOverProperty,
-                        Value = true,
-                        Setters =
-                        {
-                            new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, hotBg)
-                        }
-                    });
-                    #endregion Phew!
+                        new System.Windows.Setter(System.Windows.Controls.Control.BackgroundProperty, hotBg)
+                    }
                 });
+                #endregion Phew!
+            });
         }
 
 		private static Brush makeBrush(wColor color)
@@ -155,7 +157,8 @@ namespace NppDemo.Utils
 		}
         private static System.Windows.Style makeStyle(Type type, System.Windows.Style basedOn = null, params (System.Windows.DependencyProperty, object)[] setterBits)
         {
-            var style = new System.Windows.Style(type, basedOn);
+            var style = basedOn != null ? new System.Windows.Style(type, basedOn)
+                                        : new System.Windows.Style(type);
             foreach (var (property, value) in setterBits)
             {
                 style.Setters.Add(new System.Windows.Setter(property, value));
