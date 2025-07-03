@@ -28,7 +28,7 @@ namespace NppDemo.Views
 			var type = GetType();
 			var allProps = Copy.GetType().GetProperties().Where(p => p.CanRead && p.CanWrite && p.DeclaringType == type);
 			Properties = allProps.Select(toPropertyItem).ToArray();
-			FormStyle.ApplyStyle(this, use_npp_styling);
+			WpfStyle.ApplyStyle(this, use_npp_styling);
 			base.ShowDialog();
 		}
 

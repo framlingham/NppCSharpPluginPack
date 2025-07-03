@@ -25,7 +25,7 @@ namespace NppDemo.Views
 		public DarkModeTestWindow()
 		{
 			InitializeComponent();
-			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
+			WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 		}
 
 		internal void GrabFocus()

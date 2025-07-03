@@ -25,7 +25,7 @@ namespace NppDemo.Views
 		{
 			InitializeComponent();
 			Version = Npp.AssemblyVersionString();
-			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
+			WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 		}
 
 		public string Version { get => (string)GetValue(VersionProperty); set => SetValue(VersionProperty, value); }

@@ -54,7 +54,7 @@ namespace NppDemo.Views
 		public SelectionRememberingControl()
 		{
 			InitializeComponent();
-			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
+			WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 
 			IsVisibleChanged += selectionRememberingControl_IsVisibleChanged;
 
@@ -72,7 +72,8 @@ namespace NppDemo.Views
 
 		IntPtr ChildHwndSourceHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
-			if ((WM)msg == WM.GETDLGCODE && IsVisible)
+			var id = (WM)msg;
+			if (id == WM.GETDLGCODE && IsVisible)
 			{
 				handled = true; // This method enables typing in TextBoxes. Hooray!
 				return (IntPtr)(DLGC.WANTALLKEYS); // better than arrows and chars when you want to accept Return key.
@@ -88,7 +89,12 @@ namespace NppDemo.Views
 
 		private void selectionRememberingControl_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
-			if ((bool)e.NewValue == false)
+			var isNowVisible = (bool)e.NewValue;
+			if (isNowVisible)
+			{
+				WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
+			}
+			else
 			{
 				_darkModeTestWindow?.Close();
 			}

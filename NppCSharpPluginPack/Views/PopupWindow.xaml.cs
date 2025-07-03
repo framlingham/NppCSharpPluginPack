@@ -24,7 +24,7 @@ namespace NppDemo.Views
 		public PopupWindow()
 		{
 			InitializeComponent();
-			FormStyle.ApplyStyle(this, Main.settings.use_npp_styling);
+			WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
 		}
 
 		public string TextFromBox { get => (string)GetValue(TextFromBoxProperty); set => SetValue(TextFromBoxProperty, value); }
