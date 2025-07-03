@@ -34,11 +34,13 @@ namespace NppDemo.Views
 			var middleHost = new ElementHostEx() { Child = innerWpf, Dock = DockStyle.Fill };
 
 			// The outer WinForms Form that allows responding to GETDLGCODE messages.
-			var outerForm = new Form
+			var outerForm = new OuterForm
 			{
 				Text = title,
 				Dock = DockStyle.Fill,
+				NotifyVisibilityChanged = innerWpf.handleVisibilityChanged, // WPF's IsVisibleChanged doesn't fire off.
 			};
+			
 			outerForm.Controls.Add(middleHost);
 
 			// Calling this enables keyboard commands like Ctrl+C and Ctrl+V, but prevents typing into modeless dialog TextBoxes unless you call a method like ChildHwndSourceHook in your dialog's Loaded callback.
@@ -49,14 +51,24 @@ namespace NppDemo.Views
 			return outerForm;
 		}
 
+		private void handleVisibilityChanged(bool beingShown)
+		{
+			if (beingShown)
+			{
+				WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
+			}
+			else
+			{
+				_darkModeTestWindow?.Close();
+			}
+		}
+
 		private DarkModeTestWindow _darkModeTestWindow;
 
 		public SelectionRememberingControl()
 		{
 			InitializeComponent();
 			WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
-
-			IsVisibleChanged += selectionRememberingControl_IsVisibleChanged;
 
 			// Because https://stackoverflow.com/q/835878/1217612 says we need to, to get typing in TextBoxes. Super! Not needed for separate WPF windows, AFAICT.
 			Loaded += selectionRememberingControl_Loaded;
@@ -87,23 +99,10 @@ namespace NppDemo.Views
 		public string SelectionText { get => (string)GetValue(SelectionTextProperty); set => SetValue(SelectionTextProperty, value); }
 		public static readonly DependencyProperty SelectionTextProperty = DependencyProperty.Register(nameof(SelectionText), typeof(string), typeof(SelectionRememberingControl), new PropertyMetadata(""));
 
-		private void selectionRememberingControl_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-		{
-			var isNowVisible = (bool)e.NewValue;
-			if (isNowVisible)
-			{
-				WpfStyle.ApplyStyle(this, Main.settings.use_npp_styling);
-			}
-			else
-			{
-				_darkModeTestWindow?.Close();
-			}
-		}
-
 		private void copySelectionsToStartEndsButton_Click(object sender, RoutedEventArgs e)
 		{
 			string startEnds = SelectionManager.StartEndListToString(SelectionManager.GetSelectedRanges());
-			System.Windows.Clipboard.SetText(startEnds);
+			Clipboard.SetText(startEnds);
 		}
 
 		private void setSelectionsFromStartEndsButton_Click(object sender, RoutedEventArgs e)

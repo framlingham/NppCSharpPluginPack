@@ -29,9 +29,6 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 		void ShowDockingForm(System.Windows.Forms.Form form);
 		void HideDockingForm(System.Windows.Forms.Form form);
 
-		void ShowDockingForm(ElementHost control);
-		void HideDockingForm(ElementHost control);
-
 		Color GetDefaultForegroundColor();
 		Color GetDefaultBackgroundColor();
 		System.Windows.Media.Color GetDefaultForeColor();
@@ -192,16 +189,6 @@ namespace Kbg.NppPluginNET.PluginInfrastructure
 			Win32.SendMessage(PluginBase.nppData._nppHandle,
 					(uint)(NppMsg.NPPM_DMMSHOW),
 					0, form.Handle);
-		}
-
-		public void HideDockingForm(ElementHost control)
-		{
-			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMHIDE, 0, control.Handle);
-		}
-
-		public void ShowDockingForm(ElementHost control)
-		{
-			Win32.SendMessage(PluginBase.nppData._nppHandle, (uint)NppMsg.NPPM_DMMSHOW, 0, control.Handle);
 		}
 
 		public Color GetDefaultForegroundColor()

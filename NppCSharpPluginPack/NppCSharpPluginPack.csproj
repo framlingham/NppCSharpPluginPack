@@ -144,6 +144,9 @@
     <Compile Include="Utils\NotifyPropertyChanged.cs" />
     <Compile Include="Utils\Npp.cs" />
     <Compile Include="Utils\NanInf.cs" />
+    <Compile Include="Utils\OuterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Utils\SelectionManager.cs" />
     <Compile Include="Utils\Settings.cs" />
     <Compile Include="Utils\WpfStyle.cs" />
